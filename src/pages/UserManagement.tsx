@@ -246,7 +246,7 @@ export function UserManagement() {
         }, {
           header: 'Actions',
           cell: item => <div className="flex gap-2">
-            <Button size="sm" variant="secondary" onClick={() => navigate(`/users/restaurant/${item.id}`)}>
+            <Button size="sm" variant="secondary" onClick={() => navigate(`/restaurant/${item.id}`)}>
               View
             </Button>
             {item.status === 'Approved' ? (
