@@ -1,6 +1,6 @@
 import { BarChart as RechartsBarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Card } from '../ui/Card';
-import { Select } from '../ui/Select';
+
 interface BarChartProps {
   title: string;
   data: any[];
@@ -14,12 +14,6 @@ export function BarChart({
   return <Card className="flex flex-col h-full">
     <div className="flex items-center justify-between mb-6">
       <h3 className="text-lg font-bold text-gray-900">{title}</h3>
-      <Select
-        className="w-32"
-        options={[{ label: 'This Week', value: 'week' }]}
-        value="week"
-        onChange={() => { }}
-      />
     </div>
     <div style={{
       height
@@ -47,9 +41,15 @@ export function BarChart({
             border: 'none',
             boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
           }} />
-          <Bar dataKey="value" fill="#FFEDD5" radius={[4, 4, 0, 0]} barSize={32} activeBar={{
-            fill: '#FF6B35'
-          }} />
+          <Bar
+            dataKey="value"
+            fill="#FF6B35"
+            radius={[8, 8, 0, 0]}
+            barSize={40}
+            activeBar={{
+              fill: '#E85A2D'
+            }}
+          />
         </RechartsBarChart>
       </ResponsiveContainer>
     </div>

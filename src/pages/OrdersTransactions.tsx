@@ -4,10 +4,12 @@ import { AdminLayout } from '../components/layout/AdminLayout';
 import { Table } from '../components/ui/Table';
 import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
-import { Select } from '../components/ui/Select';
+import { Input } from '../components/ui/Input';
+import { FilterSelect } from '../components/ui/FilterSelect';
 import { KPICard } from '../components/dashboard/KPICard';
-import { exportToCSV } from '../utils/exportCSV';
-import { Download, DollarSign, CreditCard, TrendingUp } from 'lucide-react';
+import { ExportPreviewModal } from '../components/modals/ExportPreviewModal';
+import { FileText, DollarSign, CreditCard, TrendingUp, Search } from 'lucide-react';
+import { GlobalFilter, FilterRange } from '../components/ui/GlobalFilter';
 const orders = [{
   id: 'ORD-001',
   customer: 'John Doe',
@@ -43,14 +45,19 @@ const orders = [{
 }];
 export function OrdersTransactions() {
   const navigate = useNavigate();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [timeFilter, setTimeFilter] = useState<FilterRange>('month');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [timeFilter, setTimeFilter] = useState('30d');
+  const [showExportModal, setShowExportModal] = useState(false);
 
   const filteredOrders = orders.filter(order => {
+    const matchesSearch = order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order.customer.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order.restaurant.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || order.status.toLowerCase() === statusFilter.toLowerCase();
     // In a real app, timeFilter would involve date calculations.
     // For now, we'll just have it match 'all' orders or simulate logic.
-    return matchesStatus;
+    return matchesStatus && matchesSearch;
   });
   return <AdminLayout>
     <div className="space-y-8">
@@ -63,8 +70,8 @@ export function OrdersTransactions() {
             Monitor platform revenue and order status
           </p>
         </div>
-        <Button variant="secondary" leftIcon={<Download className="h-4 w-4" />} onClick={() => exportToCSV(orders, 'orders-export')}>
-          Export CSV
+        <Button variant="secondary" leftIcon={<FileText className="h-4 w-4" />} onClick={() => setShowExportModal(true)}>
+          Export Report
         </Button>
       </div>
 
@@ -77,29 +84,39 @@ export function OrdersTransactions() {
 
       {/* Orders Table */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="p-6 border-b border-gray-100 flex justify-between items-center">
-          <h3 className="font-bold text-gray-900">Recent Transactions</h3>
-          <div className="flex gap-2">
-            <Select
-              className="w-32"
+        <div className="p-6 border-b border-gray-100 flex flex-col xl:flex-row gap-4 xl:items-center justify-between">
+          <div className="flex items-center gap-4 flex-1">
+            <h3 className="font-bold text-gray-900 whitespace-nowrap">Transactions</h3>
+            {/* Functional Search */}
+            <div className="relative flex-1 max-w-md group">
+              <div className="absolute left-4 top-1/2 -translate-y-1/2 p-1.5 bg-gray-50 rounded-lg group-focus-within:bg-[#FF6B35] transition-colors">
+                <Search className="h-4 w-4 text-gray-400 group-focus-within:text-white transition-colors" />
+              </div>
+              <Input
+                placeholder="Search transactions..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="!pl-16 bg-gray-50 border-transparent rounded-2xl px-4 py-3 font-medium focus:bg-white focus:ring-4 focus:ring-[#FF6B35]/10 focus:border-[#FF6B35] outline-none transition-all hover:bg-white hover:border-gray-200 shadow-none h-auto text-sm"
+              />
+            </div>
+          </div>
+
+          <div className="flex gap-2 items-center">
+            <FilterSelect
+              label="Status"
+              value={statusFilter}
+              onChange={setStatusFilter}
               options={[
                 { label: 'All Status', value: 'all' },
                 { label: 'Completed', value: 'completed' },
                 { label: 'Pending', value: 'pending' },
                 { label: 'Cancelled', value: 'cancelled' },
               ]}
-              value={statusFilter}
-              onChange={setStatusFilter}
             />
-            <Select
-              className="w-40"
-              options={[
-                { label: 'Last 30 Days', value: '30d' },
-                { label: 'Last 7 Days', value: '7d' },
-                { label: 'All Time', value: 'all' },
-              ]}
-              value={timeFilter}
-              onChange={setTimeFilter}
+            <div className="h-8 w-px bg-gray-200 mx-2" />
+            <GlobalFilter
+              onFilterChange={(range: FilterRange) => setTimeFilter(range)}
+              className="w-auto"
             />
           </div>
         </div>
@@ -134,6 +151,13 @@ export function OrdersTransactions() {
           </Button>
         }]} />
       </div>
+
+      <ExportPreviewModal
+        isOpen={showExportModal}
+        onClose={() => setShowExportModal(false)}
+        data={filteredOrders}
+        title="Orders & Transactions Report"
+      />
     </div>
   </AdminLayout>;
 }

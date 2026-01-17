@@ -1,17 +1,18 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AdminLayout } from '../components/layout/AdminLayout';
 import { Table } from '../components/ui/Table';
 import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
-import { Select } from '../components/ui/Select';
-import { Search } from 'lucide-react';
+import { Search, Star, MapPin, ShieldAlert } from 'lucide-react';
+import { FilterSelect } from '../components/ui/FilterSelect';
 export function UserManagement() {
   const [activeTab, setActiveTab] = useState<'restaurants' | 'customers'>('restaurants');
   const [searchTerm, setSearchTerm] = useState('');
   const [stateFilter, setStateFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [ratingFilter, setRatingFilter] = useState('all');
   const navigate = useNavigate();
 
   const [restaurantData, setRestaurantData] = useState([
@@ -22,7 +23,8 @@ export function UserManagement() {
       state: 'NY',
       status: 'Approved',
       listings: 45,
-      revenue: '$12,450'
+      revenue: '$12,450',
+      rating: 4.8
     },
     {
       id: 2,
@@ -31,7 +33,8 @@ export function UserManagement() {
       state: 'CA',
       status: 'Pending',
       listings: 12,
-      revenue: '$3,200'
+      revenue: '$3,200',
+      rating: 4.2
     },
     {
       id: 3,
@@ -40,7 +43,8 @@ export function UserManagement() {
       state: 'TX',
       status: 'Blocked',
       listings: 0,
-      revenue: '$0'
+      revenue: '$0',
+      rating: 3.5
     },
     {
       id: 4,
@@ -49,7 +53,8 @@ export function UserManagement() {
       state: 'FL',
       status: 'Approved',
       listings: 156,
-      revenue: '$45,100'
+      revenue: '$45,100',
+      rating: 4.9
     },
     {
       id: 5,
@@ -58,7 +63,8 @@ export function UserManagement() {
       state: 'WA',
       status: 'Approved',
       listings: 34,
-      revenue: '$8,900'
+      revenue: '$8,900',
+      rating: 4.6
     }
   ]);
 
@@ -108,7 +114,11 @@ export function UserManagement() {
       r.owner.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesState = stateFilter === 'all' || r.state.toLowerCase() === stateFilter.toLowerCase();
     const matchesStatus = statusFilter === 'all' || r.status.toLowerCase() === statusFilter.toLowerCase();
-    return matchesSearch && matchesState && matchesStatus;
+    const matchesRating = ratingFilter === 'all' ||
+      (ratingFilter === '4+' && r.rating >= 4) ||
+      (ratingFilter === '3+' && r.rating >= 3 && r.rating < 4) ||
+      (ratingFilter === 'below3' && r.rating < 3);
+    return matchesSearch && matchesState && matchesStatus && matchesRating;
   });
 
   const filteredCustomers = customerData.filter(c => {
@@ -138,109 +148,151 @@ export function UserManagement() {
         </div>
       </div>
 
-      <div className="flex gap-4 items-center bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-        <div className="w-64">
-          <Input
-            icon={<Search className="h-4 w-4" />}
-            placeholder="Search users..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-        <Select
-          className="w-40"
-          options={[
-            { label: 'All States', value: 'all' },
-            { label: 'NY', value: 'ny' },
-            { label: 'CA', value: 'ca' },
-            { label: 'TX', value: 'tx' },
-          ]}
-          value={stateFilter}
-          onChange={setStateFilter}
-        />
-        <Select
-          className="w-40"
-          options={[
-            { label: 'All Status', value: 'all' },
-            { label: 'Approved', value: 'approved' },
-            { label: 'Pending', value: 'pending' },
-            { label: 'Blocked', value: 'blocked' },
-          ]}
-          value={statusFilter}
-          onChange={setStatusFilter}
-        />
-      </div>
 
-      {activeTab === 'restaurants' ? <Table data={filteredRestaurants} columns={[{
-        header: 'Restaurant Name',
-        accessorKey: 'name',
-        className: 'font-medium text-gray-900'
-      }, {
-        header: 'Owner',
-        accessorKey: 'owner'
-      }, {
-        header: 'State',
-        accessorKey: 'state'
-      }, {
-        header: 'Status',
-        cell: item => <Badge variant={item.status === 'Approved' ? 'success' : item.status === 'Pending' ? 'warning' : 'error'}>
-          {item.status}
-        </Badge>
-      }, {
-        header: 'Total Listings',
-        accessorKey: 'listings'
-      }, {
-        header: 'Revenue',
-        accessorKey: 'revenue'
-      }, {
-        header: 'Actions',
-        cell: item => <div className="flex gap-2">
-          <Button size="sm" variant="secondary" onClick={() => navigate(`/users/restaurant/${item.id}`)}>
-            View
-          </Button>
-          {item.status === 'Approved' ? (
-            <Button size="sm" variant="danger" onClick={() => toggleRestaurantStatus(item.id, item.status)}>
-              Block
-            </Button>
-          ) : (
-            <Button size="sm" variant="primary" onClick={() => toggleRestaurantStatus(item.id, item.status)}>
-              Approve
-            </Button>
-          )}
+      <div className="flex flex-col gap-6">
+        {/* Search and Filters Container */}
+        <div className="flex flex-col xl:flex-row gap-4 items-start xl:items-center justify-between bg-white p-4 rounded-3xl border border-gray-100 shadow-sm">
+          {/* Search - Expanded */}
+          <div className="w-full xl:max-w-md relative group">
+            <div className="absolute left-4 top-1/2 -translate-y-1/2 p-1.5 bg-gray-50 rounded-lg group-focus-within:bg-[#FF6B35] transition-colors">
+              <Search className="h-4 w-4 text-gray-400 group-focus-within:text-white transition-colors" />
+            </div>
+            <Input
+              placeholder="Search restaurants, owners..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="!pl-16 bg-gray-50 border-transparent rounded-2xl px-4 py-3.5 font-medium focus:bg-white focus:ring-4 focus:ring-[#FF6B35]/10 focus:border-[#FF6B35] outline-none transition-all hover:bg-white hover:border-gray-200 shadow-none"
+            />
+          </div>
+
+          {/* Filters - Left Aligned (now next to search essentially, but visually grouped) */}
+          <div className="flex flex-wrap gap-3 w-full xl:w-auto">
+            {activeTab === 'restaurants' && (
+              <>
+                <FilterSelect
+                  label="State"
+                  icon={MapPin}
+                  value={stateFilter}
+                  onChange={setStateFilter}
+                  options={[
+                    { label: 'All States', value: 'all' },
+                    { label: 'New York (NY)', value: 'ny' },
+                    { label: 'California (CA)', value: 'ca' },
+                    { label: 'Texas (TX)', value: 'tx' },
+                    { label: 'Florida (FL)', value: 'fl' },
+                    { label: 'Washington (WA)', value: 'wa' },
+                  ]}
+                />
+
+                <FilterSelect
+                  label="Rating"
+                  icon={Star}
+                  value={ratingFilter}
+                  onChange={setRatingFilter}
+                  options={[
+                    { label: 'All Ratings', value: 'all' },
+                    { label: '4+ Stars', value: '4+' },
+                    { label: '3-4 Stars', value: '3+' },
+                    { label: 'Below 3 Stars', value: 'below3' },
+                  ]}
+                />
+              </>
+            )}
+
+            <FilterSelect
+              label="Status"
+              icon={ShieldAlert}
+              value={statusFilter}
+              onChange={setStatusFilter}
+              options={[
+                { label: 'All Status', value: 'all' },
+                { label: 'Approved', value: 'approved' },
+                { label: 'Pending Approval', value: 'pending' },
+                { label: 'Blocked / Suspended', value: 'blocked' },
+              ]}
+            />
+          </div>
         </div>
-      }]} /> : <Table data={filteredCustomers} columns={[{
-        header: 'Customer Name',
-        accessorKey: 'name',
-        className: 'font-medium text-gray-900'
-      }, {
-        header: 'Email',
-        accessorKey: 'email'
-      }, {
-        header: 'Total Orders',
-        accessorKey: 'orders'
-      }, {
-        header: 'Reviews',
-        accessorKey: 'reviews'
-      }, {
-        header: 'Status',
-        cell: item => <Badge variant={item.status === 'Active' ? 'success' : 'error'}>
-          {item.status}
-        </Badge>
-      }, {
-        header: 'Actions',
-        cell: item => <div className="flex gap-2">
-          <Button size="sm" variant="secondary" onClick={() => navigate(`/users/customer/${item.id}`)}>
-            Profile
-          </Button>
-          <Button
-            size="sm"
-            variant={item.status === 'Active' ? 'danger' : 'primary'}
-            onClick={() => toggleCustomerStatus(item.id, item.status)}
-          >
-            {item.status === 'Active' ? 'Block' : 'Unblock'}
-          </Button>
-        </div>
-      }]} />}
+
+        {activeTab === 'restaurants' ? <Table data={filteredRestaurants} columns={[{
+          header: 'Restaurant Name',
+          accessorKey: 'name',
+          className: 'font-medium text-gray-900'
+        }, {
+          header: 'Owner',
+          accessorKey: 'owner'
+        }, {
+          header: 'State',
+          accessorKey: 'state'
+        }, {
+          header: 'Status',
+          cell: item => <Badge variant={item.status === 'Approved' ? 'success' : item.status === 'Pending' ? 'warning' : 'error'}>
+            {item.status}
+          </Badge>
+        }, {
+          header: 'Total Listings',
+          accessorKey: 'listings'
+        }, {
+          header: 'Revenue',
+          accessorKey: 'revenue'
+        }, {
+          header: 'Rating',
+          cell: item => (
+            <div className="flex items-center gap-1">
+              <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />
+              <span className="font-bold text-gray-900">{item.rating}</span>
+            </div>
+          )
+        }, {
+          header: 'Actions',
+          cell: item => <div className="flex gap-2">
+            <Button size="sm" variant="secondary" onClick={() => navigate(`/users/restaurant/${item.id}`)}>
+              View
+            </Button>
+            {item.status === 'Approved' ? (
+              <Button size="sm" variant="danger" onClick={() => toggleRestaurantStatus(item.id, item.status)}>
+                Block
+              </Button>
+            ) : (
+              <Button size="sm" variant="primary" onClick={() => toggleRestaurantStatus(item.id, item.status)}>
+                Approve
+              </Button>
+            )}
+          </div>
+        }]} /> : <Table data={filteredCustomers} columns={[{
+          header: 'Customer Name',
+          accessorKey: 'name',
+          className: 'font-medium text-gray-900'
+        }, {
+          header: 'Email',
+          accessorKey: 'email'
+        }, {
+          header: 'Total Orders',
+          accessorKey: 'orders'
+        }, {
+          header: 'Reviews',
+          accessorKey: 'reviews'
+        }, {
+          header: 'Status',
+          cell: item => <Badge variant={item.status === 'Active' ? 'success' : 'error'}>
+            {item.status}
+          </Badge>
+        }, {
+          header: 'Actions',
+          cell: item => <div className="flex gap-2">
+            <Button size="sm" variant="secondary" onClick={() => navigate(`/users/customer/${item.id}`)}>
+              Profile
+            </Button>
+            <Button
+              size="sm"
+              variant={item.status === 'Active' ? 'danger' : 'primary'}
+              onClick={() => toggleCustomerStatus(item.id, item.status)}
+            >
+              {item.status === 'Active' ? 'Block' : 'Unblock'}
+            </Button>
+          </div>
+        }]} />}
+      </div>
     </div>
   </AdminLayout>;
 }

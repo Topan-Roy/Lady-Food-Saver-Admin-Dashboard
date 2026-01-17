@@ -5,22 +5,28 @@ interface DonutChartProps {
   title: string;
   data: any[];
   height?: number;
+  showFilter?: boolean;
 }
+
 const COLORS = ['#FF6B35', '#FDBA74', '#1F2937', '#9CA3AF'];
+
 export function DonutChart({
   title,
   data,
-  height = 300
+  height = 300,
+  showFilter = false
 }: DonutChartProps) {
   return <Card className="flex flex-col h-full">
     <div className="flex items-center justify-between mb-6">
       <h3 className="text-lg font-bold text-gray-900">{title}</h3>
-      <Select
-        className="w-32"
-        options={[{ label: 'This Month', value: 'month' }]}
-        value="month"
-        onChange={() => { }}
-      />
+      {showFilter && (
+        <Select
+          className="w-32"
+          options={[{ label: 'This Month', value: 'month' }]}
+          value="month"
+          onChange={() => { }}
+        />
+      )}
     </div>
     <div style={{
       height

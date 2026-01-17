@@ -1,5 +1,5 @@
 import { Card } from '../ui/Card';
-import { Star, ChevronDown } from 'lucide-react';
+import { Star } from 'lucide-react';
 const trendingItems = [{
   id: 1,
   name: 'Grilled Chicken Delight',
@@ -25,17 +25,16 @@ const trendingItems = [{
   price: 5.99,
   image: 'https://images.unsplash.com/photo-1551248429-40975aa4de74?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60'
 }];
+import { useNavigate } from 'react-router-dom';
+
 export function TrendingWidget() {
+  const navigate = useNavigate();
+
   return <div className="space-y-6">
-    <div className="flex items-center justify-between">
-      <h3 className="text-lg font-bold text-gray-900">Trending Menus</h3>
-      <button className="flex items-center text-sm font-medium text-gray-500 hover:text-[#FF6B35] transition-colors bg-white px-3 py-1.5 rounded-lg border border-gray-100 shadow-sm hover:shadow-md hover:border-[#FF6B35]/20">
-        This Week <ChevronDown className="h-4 w-4 ml-1" />
-      </button>
-    </div>
+    <h3 className="text-lg font-bold text-gray-900">Trending Menus</h3>
 
     <div className="space-y-6">
-      {trendingItems.map(item => <Card key={item.id} className="overflow-hidden hover:shadow-lg transition-all duration-300 group cursor-pointer border-gray-100/50" noPadding>
+      {trendingItems.map(item => <Card key={item.id} className="overflow-hidden hover:shadow-lg transition-all duration-300 group cursor-pointer border-gray-100/50" noPadding onClick={() => navigate(`/users/restaurant/1?tab=items`)}>
         <div className="h-32 w-full relative overflow-hidden">
           <img src={item.image} alt={item.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />

@@ -1,14 +1,17 @@
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { AdminLayout } from '../components/layout/AdminLayout';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
-import { ArrowLeft, Printer, Download, User, Store } from 'lucide-react';
+import { InvoiceModal } from '../components/modals/InvoiceModal';
+import { ArrowLeft, Printer, User, Store } from 'lucide-react';
 export function OrderDetail() {
   const {
     id
   } = useParams();
   const navigate = useNavigate();
+  const [showInvoice, setShowInvoice] = useState(false);
   const order = {
     id: id || 'ORD-1025',
     date: 'Oct 24, 2023 at 2:30 PM',
@@ -16,7 +19,8 @@ export function OrderDetail() {
     paymentMethod: 'Credit Card (**** 4242)',
     subtotal: '$17.97',
     fee: '$1.50',
-    total: '$19.47',
+    tax: '$0.85',
+    total: '$20.32',
     customer: {
       name: 'Dana White',
       email: 'dana@example.com',
@@ -46,11 +50,8 @@ export function OrderDetail() {
           Back to Orders
         </Button>
         <div className="flex gap-3">
-          <Button variant="outline" leftIcon={<Printer className="h-4 w-4" />}>
+          <Button variant="outline" leftIcon={<Printer className="h-4 w-4" />} onClick={() => setShowInvoice(true)}>
             Print Invoice
-          </Button>
-          <Button variant="secondary" leftIcon={<Download className="h-4 w-4" />}>
-            Download PDF
           </Button>
         </div>
       </div>
@@ -95,6 +96,10 @@ export function OrderDetail() {
                 <span>{order.subtotal}</span>
               </div>
               <div className="flex justify-between text-gray-600">
+                <span>State Tax</span>
+                <span>{order.tax}</span>
+              </div>
+              <div className="flex justify-between text-gray-600">
                 <span>Platform Fee</span>
                 <span>{order.fee}</span>
               </div>
@@ -108,15 +113,15 @@ export function OrderDetail() {
           <Card title="Order Timeline">
             <div className="space-y-6 ml-2">
               {[{
-                title: 'Order Delivered',
+                title: 'Picked Up',
                 time: '3:15 PM',
                 active: true
               }, {
-                title: 'Driver Picked Up',
+                title: 'Ready For Pickup',
                 time: '2:55 PM',
                 active: true
               }, {
-                title: 'Restaurant Preparing',
+                title: 'Food Preparing',
                 time: '2:35 PM',
                 active: true
               }, {
@@ -171,6 +176,25 @@ export function OrderDetail() {
           </Card>
         </div>
       </div>
+
+      <InvoiceModal
+        isOpen={showInvoice}
+        onClose={() => setShowInvoice(false)}
+        orderData={{
+          id: order.id,
+          customer: order.customerName,
+          restaurant: order.restaurant.name,
+          date: order.date,
+          items: order.items.map(item => ({
+            name: item.name,
+            quantity: item.qty,
+            price: parseFloat(item.price.replace('$', ''))
+          })),
+          subtotal: parseFloat(order.subtotal.replace('$', '')),
+          tax: parseFloat(order.fee.replace('$', '')),
+          total: parseFloat(order.total.replace('$', ''))
+        }}
+      />
     </div>
   </AdminLayout>;
 }

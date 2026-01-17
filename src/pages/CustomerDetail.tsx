@@ -77,7 +77,6 @@ export function CustomerDetail() {
                 </div>
               </div>
               <div className="flex gap-3">
-                <Button variant="outline">Reset Password</Button>
                 <Button variant="danger" leftIcon={<Ban className="h-4 w-4" />}>
                   Block User
                 </Button>
@@ -148,7 +147,7 @@ export function CustomerDetail() {
           </Badge>
         }, {
           header: 'Action',
-          cell: () => <Button size="sm" variant="ghost">
+          cell: (item) => <Button size="sm" variant="ghost" onClick={() => navigate(`/orders/${item.id}`)}>
             View
           </Button>
         }]} />

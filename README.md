@@ -1,6 +1,6 @@
-# Food Saver app Admin
+# DineFive Admin Dashboard
 
-This is the admin dashboard for the Food Saver application.
+This is the admin dashboard for the DineFive application.
 
 ## Getting Started
 

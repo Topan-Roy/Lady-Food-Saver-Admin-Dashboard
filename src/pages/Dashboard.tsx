@@ -1,127 +1,147 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { AdminLayout } from '../components/layout/AdminLayout';
 import { KPICard } from '../components/dashboard/KPICard';
 import { LineChart } from '../components/charts/LineChart';
-import { DonutChart } from '../components/charts/DonutChart';
 import { BarChart } from '../components/charts/BarChart';
 import { TrendingWidget } from '../components/dashboard/TrendingWidget';
+import { TopRestaurants } from '../components/dashboard/TopRestaurants';
 import { ActivityFeed } from '../components/dashboard/ActivityFeed';
 import { CustomerReviews } from '../components/dashboard/CustomerReviews';
-import { ShoppingBag, Users, DollarSign, Store, AlertCircle, TrendingUp } from 'lucide-react';
+import { ShoppingBag, Users, DollarSign } from 'lucide-react';
 import { Table } from '../components/ui/Table';
 import { Badge } from '../components/ui/Badge';
-import { Select } from '../components/ui/Select';
-const kpiData = [{
-  title: 'Total Orders',
-  value: '48,652',
-  change: '1.58%',
-  trend: 'up',
-  icon: ShoppingBag,
-  color: 'orange'
-}, {
-  title: 'Total Customers',
-  value: '1,248',
-  change: '0.42%',
-  trend: 'down',
-  icon: Users,
-  color: 'orange'
-}, {
-  title: 'Total Revenue',
-  value: '$215,860',
-  change: '2.36%',
-  trend: 'up',
-  icon: DollarSign,
-  color: 'orange'
-}, {
-  title: 'Active Restaurants',
-  value: '156',
-  change: '5.2%',
-  trend: 'up',
-  icon: Store,
-  color: 'blue'
-}, {
-  title: 'Platform Earnings',
-  value: '$12,450',
-  change: '3.1%',
-  trend: 'up',
-  icon: TrendingUp,
-  color: 'green'
-}, {
-  title: 'Flagged Listings',
-  value: '23',
-  change: '12%',
-  trend: 'down',
-  icon: AlertCircle,
-  color: 'purple'
-}] as const;
-const revenueData = [{
-  name: 'Mar',
-  income: 4000,
-  expense: 2400
-}, {
-  name: 'Apr',
-  income: 3000,
-  expense: 1398
-}, {
-  name: 'May',
-  income: 2000,
-  expense: 9800
-}, {
-  name: 'Jun',
-  income: 2780,
-  expense: 3908
-}, {
-  name: 'Jul',
-  income: 1890,
-  expense: 4800
-}, {
-  name: 'Aug',
-  income: 2390,
-  expense: 3800
-}, {
-  name: 'Sep',
-  income: 3490,
-  expense: 4300
-}, {
-  name: 'Oct',
-  income: 4200,
-  expense: 2400
-}];
-const categoryData = [{
-  name: 'Seafood',
-  value: 30
-}, {
-  name: 'Beverages',
-  value: 25
-}, {
-  name: 'Dessert',
-  value: 25
-}, {
-  name: 'Pasta',
-  value: 20
-}];
-const orderStatusData = [{
-  name: 'Mon',
-  value: 65
-}, {
-  name: 'Tue',
-  value: 59
-}, {
-  name: 'Wed',
-  value: 80
-}, {
-  name: 'Thu',
-  value: 81
-}, {
-  name: 'Fri',
-  value: 56
-}, {
-  name: 'Sat',
-  value: 55
-}, {
-  name: 'Sun',
-  value: 40
-}];
+import { GlobalFilter, FilterRange } from '../components/ui/GlobalFilter';
+
+// Base data for different time periods
+const baseKPIData = {
+  today: [
+    { title: 'Total Orders', value: '152', change: '2.1%', trend: 'up', icon: ShoppingBag, color: 'orange' },
+    { title: 'Total Customers', value: '48', change: '1.2%', trend: 'up', icon: Users, color: 'orange' },
+    { title: 'Total Revenue', value: '$8,450', change: '3.5%', trend: 'up', icon: DollarSign, color: 'orange' },
+  ],
+  week: [
+    { title: 'Total Orders', value: '1,248', change: '1.8%', trend: 'up', icon: ShoppingBag, color: 'orange' },
+    { title: 'Total Customers', value: '342', change: '0.9%', trend: 'up', icon: Users, color: 'orange' },
+    { title: 'Total Revenue', value: '$52,340', change: '2.8%', trend: 'up', icon: DollarSign, color: 'orange' },
+  ],
+  month: [
+    { title: 'Total Orders', value: '48,652', change: '1.58%', trend: 'up', icon: ShoppingBag, color: 'orange' },
+    { title: 'Total Customers', value: '1,248', change: '0.42%', trend: 'down', icon: Users, color: 'orange' },
+    { title: 'Total Revenue', value: '$215,860', change: '2.36%', trend: 'up', icon: DollarSign, color: 'orange' },
+  ],
+  year: [
+    { title: 'Total Orders', value: '584,250', change: '12.5%', trend: 'up', icon: ShoppingBag, color: 'orange' },
+    { title: 'Total Customers', value: '15,680', change: '8.2%', trend: 'up', icon: Users, color: 'orange' },
+    { title: 'Total Revenue', value: '$2,590,420', change: '15.8%', trend: 'up', icon: DollarSign, color: 'orange' },
+  ],
+  custom: [
+    { title: 'Total Orders', value: '25,340', change: '4.2%', trend: 'up', icon: ShoppingBag, color: 'orange' },
+    { title: 'Total Customers', value: '680', change: '2.1%', trend: 'up', icon: Users, color: 'orange' },
+    { title: 'Total Revenue', value: '$125,680', change: '5.6%', trend: 'up', icon: DollarSign, color: 'orange' },
+  ],
+} as const;
+
+const baseRevenueData = {
+  today: [
+    { name: '6AM', income: 450, expense: 200 },
+    { name: '9AM', income: 850, expense: 400 },
+    { name: '12PM', income: 1200, expense: 600 },
+    { name: '3PM', income: 950, expense: 450 },
+    { name: '6PM', income: 1400, expense: 700 },
+    { name: '9PM', income: 800, expense: 350 },
+  ],
+  week: [
+    { name: 'Mon', income: 6500, expense: 3200 },
+    { name: 'Tue', income: 7200, expense: 3800 },
+    { name: 'Wed', income: 8100, expense: 4200 },
+    { name: 'Thu', income: 7800, expense: 3900 },
+    { name: 'Fri', income: 9200, expense: 4500 },
+    { name: 'Sat', income: 10500, expense: 5200 },
+    { name: 'Sun', income: 8900, expense: 4400 },
+  ],
+  month: [
+    { name: 'Week 1', income: 45000, expense: 22000 },
+    { name: 'Week 2', income: 52000, expense: 26000 },
+    { name: 'Week 3', income: 48000, expense: 24000 },
+    { name: 'Week 4', income: 55000, expense: 28000 },
+  ],
+  year: [
+    { name: 'Jan', income: 180000, expense: 90000 },
+    { name: 'Feb', income: 165000, expense: 82000 },
+    { name: 'Mar', income: 195000, expense: 98000 },
+    { name: 'Apr', income: 210000, expense: 105000 },
+    { name: 'May', income: 225000, expense: 112000 },
+    { name: 'Jun', income: 240000, expense: 120000 },
+    { name: 'Jul', income: 235000, expense: 118000 },
+    { name: 'Aug', income: 250000, expense: 125000 },
+    { name: 'Sep', income: 245000, expense: 122000 },
+    { name: 'Oct', income: 260000, expense: 130000 },
+    { name: 'Nov', income: 255000, expense: 128000 },
+    { name: 'Dec', income: 270000, expense: 135000 },
+  ],
+  custom: [
+    { name: 'Period 1', income: 25000, expense: 12000 },
+    { name: 'Period 2', income: 28000, expense: 14000 },
+    { name: 'Period 3', income: 32000, expense: 16000 },
+    { name: 'Period 4', income: 30000, expense: 15000 },
+  ],
+};
+
+const baseOrderStatusData = {
+  today: [
+    { name: '6AM', value: 12 },
+    { name: '9AM', value: 25 },
+    { name: '12PM', value: 45 },
+    { name: '3PM', value: 38 },
+    { name: '6PM', value: 52 },
+    { name: '9PM', value: 30 },
+  ],
+  week: [
+    { name: 'Mon', value: 165 },
+    { name: 'Tue', value: 178 },
+    { name: 'Wed', value: 195 },
+    { name: 'Thu', value: 188 },
+    { name: 'Fri', value: 210 },
+    { name: 'Sat', value: 235 },
+    { name: 'Sun', value: 198 },
+  ],
+  month: [
+    { name: 'Week 1', value: 1250 },
+    { name: 'Week 2', value: 1380 },
+    { name: 'Week 3', value: 1290 },
+    { name: 'Week 4', value: 1450 },
+  ],
+  year: [
+    { name: 'Jan', value: 4200 },
+    { name: 'Feb', value: 3900 },
+    { name: 'Mar', value: 4500 },
+    { name: 'Apr', value: 4800 },
+    { name: 'May', value: 5100 },
+    { name: 'Jun', value: 5400 },
+    { name: 'Jul', value: 5200 },
+    { name: 'Aug', value: 5600 },
+    { name: 'Sep', value: 5300 },
+    { name: 'Oct', value: 5800 },
+    { name: 'Nov', value: 5500 },
+    { name: 'Dec', value: 6000 },
+  ],
+  custom: [
+    { name: 'Period 1', value: 850 },
+    { name: 'Period 2', value: 920 },
+    { name: 'Period 3', value: 1050 },
+    { name: 'Period 4', value: 980 },
+  ],
+};
+
+const topRestaurants = [
+  { id: '1', name: "Joe's Pizza", orders: 1250, revenue: 45200 },
+  { id: '2', name: 'Sushi World', orders: 980, revenue: 38400 },
+  { id: '3', name: 'Burger King', orders: 850, revenue: 22100 },
+  { id: '4', name: 'Taco Bell', orders: 720, revenue: 18500 },
+  { id: '5', name: 'Sunset Cafe', orders: 650, revenue: 15200 }
+];
+
 const recentOrders = [{
   id: 'ORD1025',
   menu: 'Salmon Sushi Roll',
@@ -150,148 +170,127 @@ const recentOrders = [{
   status: 'Completed',
   img: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=100'
 }];
+
 export function Dashboard() {
-  const [timeFilter, setTimeFilter] = useState('month');
+  const navigate = useNavigate();
+  const [timeFilter, setTimeFilter] = useState<FilterRange>('week');
+
+  // Dynamically compute data based on selected filter
+  const kpiData = useMemo(() => {
+    return baseKPIData[timeFilter] || baseKPIData.week;
+  }, [timeFilter]);
+
+  const revenueData = useMemo(() => {
+    return baseRevenueData[timeFilter] || baseRevenueData.week;
+  }, [timeFilter]);
+
+  const orderStatusData = useMemo(() => {
+    return baseOrderStatusData[timeFilter] || baseOrderStatusData.week;
+  }, [timeFilter]);
+
   return <AdminLayout>
-    <div className="flex flex-col xl:flex-row gap-8">
-      {/* Main Content Area */}
-      <div className="flex-1 space-y-8 min-w-0">
-        {/* Header */}
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-gray-500">Hello Orlando, welcome back!</p>
-        </div>
+    <div className="flex flex-col gap-8">
+      {/* Main Layout */}
+      <div className="flex flex-col xl:flex-row gap-8">
+        {/* Main Content Area */}
+        <div className="flex-1 space-y-8 min-w-0">
+          {/* Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+              <p className="text-gray-500 font-medium">Hello Orlando, welcome back!</p>
+            </div>
+            <GlobalFilter onFilterChange={(range: FilterRange, custom) => {
+              console.log('Filter changed:', range, custom);
+              setTimeFilter(range);
+            }} />
+          </div>
 
-        {/* KPI Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {kpiData.slice(0, 3).map((kpi, i) => <div key={i} className="h-40">
-            <KPICard {...kpi} />
-          </div>)}
-        </div>
+          {/* KPI Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {kpiData.slice(0, 3).map((kpi, i) => <div key={i} className="h-40">
+              <KPICard {...kpi} />
+            </div>)}
+          </div>
 
-        {/* Charts Row 1 */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[400px]">
-          <div className="lg:col-span-2 h-full">
+          {/* Charts Row 1 - Total Revenue Full Width */}
+          <div className="h-[400px]">
             <LineChart title="Total Revenue" data={revenueData} height={300} />
           </div>
-          <div className="h-full">
-            <DonutChart title="Top Categories" data={categoryData} height={300} />
-          </div>
-        </div>
 
-        {/* Charts Row 2 */}
-        <div className="h-[350px]">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full">
-            <div className="lg:col-span-2 h-full">
-              <BarChart title="Orders Overview" data={orderStatusData} height={250} />
+          {/* Charts Row 2 - Orders Overview */}
+          <div className="h-[400px]">
+            <BarChart title="Orders Overview" data={orderStatusData} height={300} />
+          </div>
+
+
+
+          {/* Recent Orders Table */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-bold text-gray-900">Recent Orders</h3>
+              <button
+                onClick={() => navigate('/orders')}
+                className="text-sm font-medium text-[#FF6B35] hover:text-[#E85A2D] transition-colors"
+              >
+                See All Orders
+              </button>
             </div>
-            <div className="h-full bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-lg font-bold text-gray-900">
-                  Order Types
-                </h3>
-                <Select
-                  className="w-32"
-                  options={[
-                    { label: 'This Month', value: 'month' },
-                    { label: 'Last Month', value: 'last_month' },
-                  ]}
-                  value={timeFilter}
-                  onChange={setTimeFilter}
-                />
-              </div>
-              <div className="space-y-6">
-                {[{
-                  label: 'Dine-In',
-                  pct: '45%',
-                  val: 900,
-                  icon: Store
-                }, {
-                  label: 'Takeaway',
-                  pct: '30%',
-                  val: 600,
-                  icon: ShoppingBag
-                }, {
-                  label: 'Online',
-                  pct: '25%',
-                  val: 500,
-                  icon: Users
-                }].map((item, i) => <div key={i} className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="p-2 bg-orange-50 rounded-lg text-[#FF6B35]">
-                      <item.icon className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">
-                        {item.label}
-                      </p>
-                      <div className="w-24 h-1.5 bg-gray-100 rounded-full mt-1">
-                        <div className="h-full bg-[#FF6B35] rounded-full" style={{
-                          width: item.pct
-                        }}></div>
-                      </div>
-                    </div>
+            <Table
+              data={recentOrders.slice(0, 5)}
+              onRowClick={(item) => navigate(`/orders/${item.id}`)}
+              columns={[{
+                header: 'Order ID',
+                accessorKey: 'id',
+                cell: item => (
+                  <button
+                    onClick={() => navigate(`/orders/${item.id}`)}
+                    className="text-[#FF6B35] hover:text-[#E85A2D] font-medium hover:underline transition-colors"
+                  >
+                    {item.id}
+                  </button>
+                )
+              }, {
+                header: 'Menu',
+                cell: item => <div className="flex items-center gap-3">
+                  <img src={item.img} alt="" className="w-10 h-10 rounded-lg object-cover" />
+                  <div>
+                    <p className="font-medium text-gray-900">{item.menu}</p>
+                    <p className="text-xs text-gray-500">{item.category}</p>
                   </div>
-                  <span className="font-bold text-gray-900">
-                    {item.val}
-                  </span>
-                </div>)}
-              </div>
-            </div>
+                </div>
+              }, {
+                header: 'Qty',
+                accessorKey: 'qty'
+              }, {
+                header: 'Amount',
+                accessorKey: 'amount',
+                cell: item => <span className="font-medium text-[#FF6B35]">
+                  {item.amount}
+                </span>
+              }, {
+                header: 'Customer',
+                accessorKey: 'customer'
+              }, {
+                header: 'Status',
+                cell: item => <Badge variant={item.status === 'Completed' ? 'success' : item.status === 'Cancelled' ? 'error' : 'warning'}>
+                  {item.status}
+                </Badge>
+              }]} />
           </div>
-        </div>
 
-        {/* Recent Orders Table */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-bold text-gray-900">Recent Orders</h3>
-            <button className="text-sm font-medium text-[#FF6B35] hover:text-[#E85A2D]">
-              See All Orders
-            </button>
-          </div>
-          <Table data={recentOrders} columns={[{
-            header: 'Order ID',
-            accessorKey: 'id'
-          }, {
-            header: 'Menu',
-            cell: item => <div className="flex items-center gap-3">
-              <img src={item.img} alt="" className="w-10 h-10 rounded-lg object-cover" />
-              <div>
-                <p className="font-medium text-gray-900">{item.menu}</p>
-                <p className="text-xs text-gray-500">{item.category}</p>
-              </div>
-            </div>
-          }, {
-            header: 'Qty',
-            accessorKey: 'qty'
-          }, {
-            header: 'Amount',
-            accessorKey: 'amount',
-            cell: item => <span className="font-medium text-[#FF6B35]">
-              {item.amount}
-            </span>
-          }, {
-            header: 'Customer',
-            accessorKey: 'customer'
-          }, {
-            header: 'Status',
-            cell: item => <Badge variant={item.status === 'Completed' ? 'success' : item.status === 'Cancelled' ? 'error' : 'warning'}>
-              {item.status}
-            </Badge>
-          }]} />
-        </div>
-
-        {/* New Customer Reviews Section */}
-        <div>
+          {/* Customer Reviews moved here */}
           <CustomerReviews />
         </div>
-      </div>
 
-      {/* Right Sidebar Widgets */}
-      <div className="w-full xl:w-80 space-y-8">
-        <TrendingWidget />
-        <ActivityFeed />
+
+        {/* Right Sidebar (Unified) */}
+        <div className="w-full xl:w-80 space-y-8">
+          <TrendingWidget />
+          <TopRestaurants data={topRestaurants} />
+          <ActivityFeed />
+        </div>
       </div>
     </div>
-  </AdminLayout>;
+  </AdminLayout >;
 }

@@ -1,6 +1,8 @@
-import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Users, ShoppingCart, BarChart3, MessageSquare, ShieldCheck, Settings, LogOut } from 'lucide-react';
+import { NavLink, useNavigate } from 'react-router-dom';
+import { LayoutDashboard, Users, ShoppingCart, BarChart3, MessageSquare, ShieldCheck, Settings, LogOut, ReceiptText, FileText } from 'lucide-react';
+
 export function Sidebar() {
+  const navigate = useNavigate();
   const navItems = [{
     icon: LayoutDashboard,
     label: 'Dashboard',
@@ -18,26 +20,38 @@ export function Sidebar() {
     label: 'Analytics',
     path: '/analytics'
   }, {
-    icon: MessageSquare,
-    label: 'Support',
-    path: '/support'
-  }, {
     icon: ShieldCheck,
     label: 'Compliance',
     path: '/compliance'
+  }, {
+    icon: ReceiptText,
+    label: 'Tax Info',
+    path: '/tax-info'
+  }, {
+    icon: FileText,
+    label: 'Legal Docs',
+    path: '/legal-documents'
+  }, {
+    icon: MessageSquare,
+    label: 'Support',
+    path: '/support'
   }, {
     icon: Settings,
     label: 'Settings',
     path: '/settings'
   }];
+
+  const handleLogout = () => {
+    localStorage.removeItem('isAuthenticated');
+    navigate('/login');
+  };
+
   return <aside className="w-64 bg-white border-r border-gray-100 fixed inset-y-0 left-0 z-50 flex flex-col">
     {/* Logo Area */}
     <div className="h-16 flex items-center px-6 border-b border-gray-50">
-      <div className="flex items-center gap-2">
-        <div className="w-8 h-8 bg-[#FF6B35] rounded-lg flex items-center justify-center">
-          <span className="text-white font-bold text-lg">F</span>
-        </div>
-        <span className="text-xl font-bold text-gray-900">Food Saver</span>
+      <div className="flex items-center gap-3">
+        <img src="/logo.png" alt="DineFive" className="w-10 h-10 object-contain" />
+        <span className="text-xl font-bold text-gray-900 tracking-tight">DineFive</span>
       </div>
     </div>
 
@@ -53,8 +67,11 @@ export function Sidebar() {
 
     {/* User Profile / Logout */}
     <div className="p-4 border-t border-gray-50">
-      <button className="flex items-center w-full px-3 py-2 text-sm font-medium text-gray-600 rounded-lg hover:bg-gray-50 hover:text-red-600 transition-colors">
-        <LogOut className="w-5 h-5 mr-3" />
+      <button
+        onClick={handleLogout}
+        className="flex items-center w-full px-3 py-3 text-sm font-bold text-gray-500 rounded-xl hover:bg-red-50 hover:text-red-600 transition-all duration-200 group"
+      >
+        <LogOut className="w-5 h-5 mr-3 group-hover:rotate-12 transition-transform" />
         Logout
       </button>
     </div>
