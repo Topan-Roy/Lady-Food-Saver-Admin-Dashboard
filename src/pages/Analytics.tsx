@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AdminLayout } from '../components/layout/AdminLayout';
 import { LineChart } from '../components/charts/LineChart';
@@ -9,13 +9,7 @@ import { Table } from '../components/ui/Table';
 import { Leaf, DollarSign, Utensils } from 'lucide-react';
 import { GlobalFilter, FilterRange } from '../components/ui/GlobalFilter';
 
-const topRestaurants = [
-  { rank: 1, id: '1', name: "Joe's Pizza", orders: 1250, revenue: '$45,200' },
-  { rank: 2, id: '2', name: 'Sushi World', orders: 980, revenue: '$38,400' },
-  { rank: 3, id: '3', name: 'Burger King', orders: 850, revenue: '$22,100' },
-  { rank: 4, id: '4', name: 'Taco Bell', orders: 720, revenue: '$18,500' },
-  { rank: 5, id: '5', name: 'Sunset Cafe', orders: 650, revenue: '$15,200' }
-];
+import { useGetCustomerFeedbackQuery, useGetTopPerformingRestaurantsQuery, useGetAnalyticsOverviewQuery } from '../redux/features/analytics';
 
 const mockData = {
   'today': {
@@ -57,28 +51,62 @@ const mockData = {
   }
 };
 
-const feedbackData = [
-  { name: '5 Stars', value: 45 },
-  { name: '4 Stars', value: 30 },
-  { name: '3 Stars', value: 15 },
-  { name: '1-2 Stars', value: 10 }
-];
-
 export function Analytics() {
   const [timeFilter, setTimeFilter] = useState<any>('7d');
   const [data, setData] = useState(mockData['7d']);
+  const [selectedProviderId] = useState('69714abce548ab10b90c0e50'); // Default ID as requested
   const navigate = useNavigate();
+
+  // Fetch feedback data
+  const { data: feedbackApiResponse } = useGetCustomerFeedbackQuery(selectedProviderId);
+
+  // Fetch top restaurants data
+  const { data: topRestaurantsResponse, isLoading: topRestaurantsLoading } = useGetTopPerformingRestaurantsQuery({ page: 1, limit: 5 });
+
+  // Fetch analytics overview data
+  const { data: analyticsOverview, isLoading: analyticsLoading } = useGetAnalyticsOverviewQuery(selectedProviderId);
 
   useEffect(() => {
     // Determine which dataset to use based on filter
-    // Simple mapping for demo
     let key = '7d';
     if (timeFilter === 'today') key = 'today';
-    if (timeFilter === '30d' || timeFilter === '12m' || timeFilter === 'year') key = '30d'; // Fallback for longer periods
+    if (timeFilter === '30d' || timeFilter === '12m' || timeFilter === 'year') key = '30d';
 
     // @ts-ignore
     setData(mockData[key] || mockData['7d']);
   }, [timeFilter]);
+
+  // Transform Feedback Data for DonutChart
+  const feedbackData = useMemo(() => {
+    const apiData = feedbackApiResponse?.CustomerFeedback;
+    if (!apiData) return [
+      { name: '5 Stars', value: 0 },
+      { name: '4 Stars', value: 0 },
+      { name: '3 Stars', value: 0 },
+      { name: '1-2 Stars', value: 0 }
+    ];
+
+    return [
+      { name: '5 Stars', value: apiData["5Stars"] || 0 },
+      { name: '4 Stars', value: apiData["4Stars"] || 0 },
+      { name: '3 Stars', value: apiData["3Stars"] || 0 },
+      { name: '1-2 Stars', value: (apiData["1Stars"] || 0) + (apiData["2Stars"] || 0) }
+    ];
+  }, [feedbackApiResponse]);
+
+  // Transform Top Restaurants Data for Table
+  const topRestaurants = useMemo(() => {
+    const apiData = topRestaurantsResponse?.TopPerformingRestaurants;
+    if (!apiData || !Array.isArray(apiData)) return [];
+
+    return apiData.map((r: any) => ({
+      rank: r.Rank,
+      id: r.providerId,
+      name: r.RestaurantName,
+      orders: r.TotalOrders,
+      revenue: `$${(r.TotalRevenue || 0).toLocaleString()}`
+    }));
+  }, [topRestaurantsResponse]);
 
   return <AdminLayout>
     <div className="space-y-8">
@@ -98,9 +126,30 @@ export function Analytics() {
 
       {/* Impact KPIs */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <KPICard title="Orders Overview" value={data.sales.reduce((a, b) => a + b.income, 0).toLocaleString()} change="15%" trend="up" icon={Utensils} color="orange" />
-        <KPICard title="CO2 Reduced (kg)" value="45,200" change="12%" trend="up" icon={Leaf} color="green" />
-        <KPICard title="Platform Profit" value="$24,326" change="8%" trend="up" icon={DollarSign} color="blue" />
+        <KPICard
+          title="Orders Overview"
+          value={analyticsLoading ? "..." : (analyticsOverview?.OrdersOverview?.totalOrders || 0).toLocaleString()}
+          change="15%"
+          trend="up"
+          icon={Utensils}
+          color="orange"
+        />
+        <KPICard
+          title="CO2 Reduced (kg)"
+          value={analyticsLoading ? "..." : (analyticsOverview?.["CO2Reduced(kg)"] || 0).toLocaleString()}
+          change="12%"
+          trend="up"
+          icon={Leaf}
+          color="green"
+        />
+        <KPICard
+          title="Platform Profit"
+          value={analyticsLoading ? "..." : `$${(analyticsOverview?.platformProfit || 0).toLocaleString()}`}
+          change="8%"
+          trend="up"
+          icon={DollarSign}
+          color="blue"
+        />
       </div>
 
       {/* Charts Grid Row 1 */}
@@ -137,28 +186,34 @@ export function Analytics() {
           <h3 className="text-lg font-bold text-gray-900 mb-6">
             Top Performing Restaurants
           </h3>
-          <Table data={topRestaurants} columns={[{
-            header: 'Rank',
-            accessorKey: 'rank',
-            className: 'w-16'
-          }, {
-            header: 'Restaurant Name',
-            cell: (item) => (
-              <span
-                className="font-medium text-gray-900 cursor-pointer hover:text-[#FF6B35] transition-colors"
-                onClick={() => navigate(`/restaurant/${item.id}`)}
-              >
-                {item.name}
-              </span>
-            )
-          }, {
-            header: 'Total Orders',
-            accessorKey: 'orders'
-          }, {
-            header: 'Total Revenue',
-            accessorKey: 'revenue',
-            className: 'text-[#FF6B35] font-bold'
-          }]} />
+          {topRestaurantsLoading ? (
+            <div className="flex items-center justify-center h-48 animate-pulse text-gray-400 font-medium">
+              Loading top restaurants...
+            </div>
+          ) : (
+            <Table data={topRestaurants} columns={[{
+              header: 'Rank',
+              accessorKey: 'rank',
+              className: 'w-16'
+            }, {
+              header: 'Restaurant Name',
+              cell: (item) => (
+                <span
+                  className="font-medium text-gray-900 cursor-pointer hover:text-[#FF6B35] transition-colors"
+                  onClick={() => navigate(`/restaurant/${item.id}`)}
+                >
+                  {item.name}
+                </span>
+              )
+            }, {
+              header: 'Total Orders',
+              accessorKey: 'orders'
+            }, {
+              header: 'Total Revenue',
+              accessorKey: 'revenue',
+              className: 'text-[#FF6B35] font-bold'
+            }]} />
+          )}
         </div>
       </div>
 

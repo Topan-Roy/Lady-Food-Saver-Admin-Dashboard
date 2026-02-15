@@ -1,8 +1,12 @@
 import { NavLink, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, Users, ShoppingCart, BarChart3, MessageSquare, ShieldCheck, Settings, LogOut, ReceiptText, FileText } from 'lucide-react';
+import { useDispatch } from 'react-redux';
+import { logout } from '../../redux/slices/authSlice';
 
 export function Sidebar() {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+
   const navItems = [{
     icon: LayoutDashboard,
     label: 'Dashboard',
@@ -42,7 +46,10 @@ export function Sidebar() {
   }];
 
   const handleLogout = () => {
+    dispatch(logout());
     localStorage.removeItem('isAuthenticated');
+    localStorage.removeItem('token');
+    localStorage.removeItem('refreshToken');
     navigate('/login');
   };
 

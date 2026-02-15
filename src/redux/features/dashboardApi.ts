@@ -53,6 +53,7 @@ export const dashboardApi = baseApi.injectEndpoints({
             query: (restaurantId) => ({
                 url: `/admin/restaurants/${restaurantId}/block`,
                 method: 'POST',
+                body: {},
             }),
             invalidatesTags: (_result, _error, id) => [{ type: "RestaurantProfile", id }, "dashboardStats"],
         }),
@@ -60,6 +61,7 @@ export const dashboardApi = baseApi.injectEndpoints({
             query: (restaurantId) => ({
                 url: `/admin/restaurants/${restaurantId}/unblock`,
                 method: 'POST',
+                body: {},
             }),
             invalidatesTags: (_result, _error, id) => [{ type: "RestaurantProfile", id }, "dashboardStats"],
         }),
@@ -105,15 +107,17 @@ export const dashboardApi = baseApi.injectEndpoints({
         }),
         blockCustomer: builder.mutation({
             query: (id) => ({
-                url: `/admin/users/${id}/block`,
+                url: `/admin/restaurants/${id}/block`,
                 method: 'POST',
+                body: {},
             }),
             invalidatesTags: ["admin-users"],
         }),
         unblockCustomer: builder.mutation({
             query: (id) => ({
-                url: `/admin/users/${id}/unblock`,
+                url: `/admin/restaurants/${id}/unblock`,
                 method: 'POST',
+                body: {},
             }),
             invalidatesTags: ["admin-users"],
         }),
