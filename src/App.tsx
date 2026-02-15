@@ -15,6 +15,7 @@ import { TaxRules } from './pages/TaxRules';
 import { LegalDocuments } from './pages/LegalDocuments';
 import { ProfilePage } from './pages/ProfilePage';
 import { Notifications } from './pages/Notifications';
+import { PromotionalBanners } from './pages/PromotionalBanners';
 
 export function App() {
   return <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
@@ -30,6 +31,7 @@ export function App() {
         <Route path="/orders" element={<OrdersTransactions />} />
         <Route path="/orders/:id" element={<OrderDetail />} />
         <Route path="/analytics" element={<Analytics />} />
+        <Route path="/banners" element={<PromotionalBanners />} />
         <Route path="/support" element={<Support />} />
         <Route path="/compliance" element={<Compliance />} />
         <Route path="/settings" element={<Settings />} />

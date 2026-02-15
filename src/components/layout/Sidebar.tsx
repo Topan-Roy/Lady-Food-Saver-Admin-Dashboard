@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Users, ShoppingCart, BarChart3, MessageSquare, ShieldCheck, Settings, LogOut, ReceiptText, FileText } from 'lucide-react';
+import { LayoutDashboard, Users, ShoppingCart, BarChart3, MessageSquare, ShieldCheck, Settings, LogOut, ReceiptText, FileText, Image } from 'lucide-react';
 import { useDispatch } from 'react-redux';
 import { logout } from '../../redux/slices/authSlice';
 
@@ -27,6 +27,12 @@ export function Sidebar() {
     icon: ShieldCheck,
     label: 'Compliance',
     path: '/compliance'
+  },
+
+  {
+    icon: Image,
+    label: 'Banners',
+    path: '/banners'
   }, {
     icon: ReceiptText,
     label: 'Tax Info',
@@ -66,7 +72,7 @@ export function Sidebar() {
     <nav className="flex-1 overflow-y-auto py-6 px-3 space-y-1">
       {navItems.map(item => <NavLink key={item.path} to={item.path} className={({
         isActive
-      }) => `flex items-center px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 group relative ${isActive ? 'text-white bg-[#FF6B35] shadow-lg shadow-orange-500/20' : 'text-gray-500 hover:bg-orange-50 hover:text-[#FF6B35]'}`}>
+      }) => `flex items-center px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 group relative ${isActive ? 'text-white bg-[#E4983A] shadow-lg shadow-orange-500/20' : 'text-gray-500 hover:bg-orange-50 hover:text-[#E4983A]'}`}>
         <item.icon className="w-5 h-5 mr-3" />
         {item.label}
       </NavLink>)}
