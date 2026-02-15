@@ -6,28 +6,84 @@ import { Avatar } from '../components/ui/Avatar';
 import { Badge } from '../components/ui/Badge';
 import { Table } from '../components/ui/Table';
 import { ArrowLeft, Mail, Phone, MapPin, Calendar, Ban } from 'lucide-react';
+import { useGetCustomersQuery } from '../redux/features/dashboardApi';
+import { format } from 'date-fns';
+import { useMemo } from 'react';
+
 export function CustomerDetail() {
-  const {
-    id
-  } = useParams();
+  const { id } = useParams();
   const navigate = useNavigate();
-  // Mock data - in real app fetch based on ID
+
+  // Fetching from the list endpoint as a more reliable source mentioned by the user
+  const { data: customersResponse, isLoading } = useGetCustomersQuery({ limit: 100 });
+
+  // Aggressively find the specific customer in the API list
+  const customerData = useMemo(() => {
+    const list = customersResponse?.data;
+    if (!list || !Array.isArray(list)) return null;
+
+    const searchId = String(id).toLowerCase();
+
+    return list.find((c: any) =>
+      String(c._id).toLowerCase() === searchId ||
+      String(c.userId).toLowerCase() === searchId ||
+      String(c.id).toLowerCase() === searchId ||
+      String(c.fullName).toLowerCase().replace(/\s/g, '-') === searchId // Fallback for name-based IDs
+    );
+  }, [customersResponse, id]);
+
+  // Transform API data to fit existing UI structure
   const customer = {
-    id,
-    name: 'Alice Brown',
-    email: 'alice@example.com',
-    phone: '+1 (555) 123-4567',
-    location: 'New York, NY',
-    joinDate: 'Jan 15, 2023',
-    status: 'Active',
-    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200',
+    id: customerData?._id || customerData?.userId || id,
+    name: customerData?.fullName || 'N/A',
+    email: customerData?.phoneNumber || 'N/A',
+    phone: customerData?.phoneNumber || 'N/A',
+    location: (() => {
+      const addr = customerData?.address;
+      if (typeof addr === 'string') return addr || 'N/A';
+      if (typeof addr === 'object' && addr !== null) {
+        return addr.label || addr.address || 'N/A';
+      }
+      return 'N/A';
+    })(),
+    joinDate: customerData?.createdAt ? format(new Date(customerData.createdAt), 'MMM dd, yyyy') : 'N/A',
+    status: (customerData?.isBlocked ? 'Blocked' : 'Active') || 'Active',
+    avatar: customerData?.profilePicture || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200',
     stats: {
-      totalOrders: 45,
-      totalSpent: '$1,240.50',
-      avgOrderValue: '$27.56',
-      savedMeals: 32
+      totalOrders: customerData?.totalUpload?.totalService || 0,
+      totalSpent: customerData?.isPayment ? 'Paid Tier' : 'Free Tier',
+      avgOrderValue: customerData?.reviews?.averageRating?.toFixed(1) || '0.0',
+      savedMeals: customerData?.followers || 0
     }
   };
+
+  console.log('Detail Page Debug:', { urlId: id, foundData: customerData });
+
+  if (isLoading) {
+    return (
+      <AdminLayout>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="flex flex-col items-center gap-4 animate-pulse">
+            <div className="w-20 h-20 bg-gray-100 rounded-full" />
+            <div className="h-4 w-48 bg-gray-100 rounded" />
+          </div>
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  if (!customerData && !isLoading) {
+    return (
+      <AdminLayout>
+        <div className="p-8 text-center text-gray-500">
+          <p className="text-xl font-bold mb-4">Customer Not Found</p>
+          <p className="mb-6">We couldn't find the customer details for ID: {id}</p>
+          <Button onClick={() => navigate('/users')}>Back to User Management</Button>
+        </div>
+      </AdminLayout>
+    );
+  }
+
   const orderHistory = [{
     id: 'ORD-101',
     restaurant: "Joe's Pizza",
@@ -47,6 +103,7 @@ export function CustomerDetail() {
     amount: '$12.00',
     status: 'Cancelled'
   }];
+
   return <AdminLayout>
     <div className="space-y-6">
       <Button variant="ghost" leftIcon={<ArrowLeft className="h-4 w-4" />} onClick={() => navigate(-1)}>
@@ -59,7 +116,7 @@ export function CustomerDetail() {
           <Avatar
             src={customer.avatar}
             alt={customer.name}
-            fallback={customer.name.split(' ').map(n => n[0]).join('')}
+            fallback={customer.name.split(' ').map((n: string) => n[0]).join('')}
             size="lg"
             className="w-24 h-24"
           />
@@ -70,9 +127,9 @@ export function CustomerDetail() {
                   {customer.name}
                 </h1>
                 <div className="flex items-center gap-2 mt-1">
-                  <Badge variant="success">{customer.status}</Badge>
+                  <Badge variant={customer.status === 'Active' ? 'success' : 'error'}>{customer.status}</Badge>
                   <span className="text-sm text-gray-500">
-                    Customer ID: #{id}
+                    Customer ID: #{customer.id}
                   </span>
                 </div>
               </div>
@@ -142,12 +199,12 @@ export function CustomerDetail() {
           accessorKey: 'amount'
         }, {
           header: 'Status',
-          cell: item => <Badge variant={item.status === 'Completed' ? 'success' : 'error'}>
+          cell: (item: any) => <Badge variant={item.status === 'Completed' ? 'success' : 'error'}>
             {item.status}
           </Badge>
         }, {
           header: 'Action',
-          cell: (item) => <Button size="sm" variant="ghost" onClick={() => navigate(`/orders/${item.id}`)}>
+          cell: (item: any) => <Button size="sm" variant="ghost" onClick={() => navigate(`/orders/${item.id}`)}>
             View
           </Button>
         }]} />

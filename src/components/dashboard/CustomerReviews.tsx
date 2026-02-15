@@ -4,16 +4,18 @@ import { Card } from '../ui/Card';
 import { Avatar } from '../ui/Avatar';
 import { Star, MessageCircle, Send, CornerDownRight } from 'lucide-react';
 import { Button } from '../ui/Button';
+import { useGetGlobalReviewsQuery, useGetRestaurantReviewsQuery } from '../../redux/features/dashboardApi';
+import { formatDistanceToNow } from 'date-fns';
 
 interface Review {
-  id: number;
+  id: string | number;
   user: string;
   avatar: string;
   rating: number;
   comment: string;
   date: string;
-  restaurant: string;
-  restaurantId: number;
+  restaurant?: string;
+  restaurantId?: string | number;
   images: string[];
   reply?: {
     text: string;
@@ -21,77 +23,52 @@ interface Review {
   } | null;
 }
 
-const initialReviews: Review[] = [{
-  id: 1,
-  user: 'Sarah Jenkins',
-  avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100',
-  rating: 5,
-  comment: 'Amazing service! The food was fresh and pickup was seamless.',
-  date: '2 hours ago',
-  restaurant: "Joe's Pizza",
-  restaurantId: 1,
-  images: ['https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=400', 'https://images.unsplash.com/photo-1571997478779-2adcbbe9ab2f?w=400'],
-  reply: null
-}, {
-  id: 2,
-  user: 'Mike Ross',
-  avatar: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=100',
-  rating: 4,
-  comment: 'Good value for money, but the location was a bit hard to find.',
-  date: '5 hours ago',
-  restaurant: 'Sushi World',
-  restaurantId: 2,
-  images: [],
-  reply: null
-}, {
-  id: 3,
-  user: 'Emily Blunt',
-  avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100',
-  rating: 5,
-  comment: 'Love the concept of saving food. Will definitely order again!',
-  date: '1 day ago',
-  restaurant: 'Taco Bell',
-  restaurantId: 4,
-  images: ['https://images.unsplash.com/photo-1565299585323-38d6b0865b47?w=400'],
-  reply: {
-    text: "Thanks for your support Emily! We're glad you enjoyed it.",
-    date: "1 day ago"
-  }
-}];
+interface CustomerReviewsProps {
+  restaurantId?: string;
+}
 
-export function CustomerReviews() {
+export function CustomerReviews({ restaurantId }: CustomerReviewsProps) {
   const navigate = useNavigate();
-  const [reviews, setReviews] = useState(initialReviews);
-  const [replyingTo, setReplyingTo] = useState<number | null>(null);
+  const [replyingTo, setReplyingTo] = useState<string | number | null>(null);
   const [replyText, setReplyText] = useState('');
 
-  const handleReviewClick = (restaurantId: number) => {
-    navigate(`/users/restaurant/${restaurantId}?tab=reviews`);
+  // Fetch reviews based on whether restaurantId is provided
+  const { data: globalReviewsData, isLoading: isGlobalLoading } = useGetGlobalReviewsQuery({}, { skip: !!restaurantId });
+  const { data: restaurantReviewsData, isLoading: isRestaurantLoading } = useGetRestaurantReviewsQuery({ id: restaurantId, rating: 'all' }, { skip: !restaurantId });
+
+  const rawReviews = restaurantId ? restaurantReviewsData?.data : globalReviewsData?.data;
+  const isLoading = restaurantId ? isRestaurantLoading : isGlobalLoading;
+
+  const reviews: Review[] = (rawReviews || []).map((review: any, index: number) => ({
+    id: index,
+    user: review.customerName || 'Anonymous',
+    avatar: review.profilePic || '',
+    rating: review.rating || 5,
+    comment: review.reviewDetails || '',
+    date: review.createdAt ? formatDistanceToNow(new Date(review.createdAt), { addSuffix: true }) : 'Recent',
+    restaurant: review.restaurantName || (restaurantId ? '' : 'Global'), // Fallback if missing
+    restaurantId: review.restaurantId || '',
+    images: [],
+    reply: null
+  }));
+
+  const handleReviewClick = (id: string | number) => {
+    if (id) navigate(`/users/restaurant/${id}?tab=reviews`);
   };
 
   const handleViewAll = () => {
     navigate('/users?tab=restaurants');
   };
 
-  const handleSendReply = (reviewId: number) => {
-    if (!replyText.trim()) return;
-
-    setReviews(prev => prev.map(r => {
-      if (r.id === reviewId) {
-        return {
-          ...r,
-          reply: {
-            text: replyText,
-            date: 'Just now'
-          }
-        };
-      }
-      return r;
-    }));
-
+  const handleSendReply = (reviewId: string | number) => {
+    console.log("Replying to", reviewId, replyText);
     setReplyingTo(null);
     setReplyText('');
   };
+
+  if (isLoading) {
+    return <Card className="animate-pulse h-64 flex items-center justify-center text-gray-400">Loading reviews...</Card>;
+  }
 
   return <Card className="border-gray-100/50">
     <div className="flex items-center justify-between mb-8">
@@ -118,7 +95,7 @@ export function CustomerReviews() {
               <p className="text-xs text-gray-500 font-medium mt-0.5">
                 Ordered from <span
                   className="text-[#FF6B35] cursor-pointer hover:underline"
-                  onClick={() => handleReviewClick(review.restaurantId)}
+                  onClick={() => review.restaurantId && handleReviewClick(review.restaurantId)}
                 >{review.restaurant}</span>
               </p>
             </div>

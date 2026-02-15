@@ -1,10 +1,15 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LogIn, Mail, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react';
+import { useDispatch } from 'react-redux';
+
+
+import { setLogin } from '@/redux/slices/authSlice';
+import { useLoginMutation } from '@/redux/api/authApi';
 
 export function Login() {
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [localLoading, setLocalLoading] = useState(false);
   const [step, setStep] = useState<'login' | 'forgot-email' | 'forgot-code' | 'forgot-password' | 'forgot-success'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -13,30 +18,71 @@ export function Login() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const navigate = useNavigate();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const [errorMsg, setErrorMsg] = useState("");
+  const dispatch = useDispatch();
+  const [login, { isLoading: isLoginLoading }] = useLoginMutation();
+
+  const isLoading = localLoading || isLoginLoading;
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-    setTimeout(() => {
-      localStorage.setItem('isAuthenticated', 'true');
-      setIsLoading(false);
-      navigate('/');
-    }, 1500);
+    setErrorMsg("");
+    try {
+      const result = await login({ email, password }).unwrap();
+      const responseData = result.data || result;
+      console.log("Response Data:", responseData);
+
+      // Extract tokens from session object as per API response
+      const accessToken =
+        responseData.session?.accessToken ||
+        responseData.data?.session?.accessToken; // Fallback for double nesting
+
+      const refreshToken =
+        responseData.session?.refreshToken ||
+        responseData.data?.session?.refreshToken;
+
+      const user = responseData.user || responseData.data?.user;
+
+      if (accessToken) {
+        dispatch(setLogin({
+          user: user || { email },
+          token: accessToken,
+          refreshToken
+        }));
+
+        localStorage.setItem("token", accessToken);
+        localStorage.setItem("isAuthenticated", "true");
+        if (refreshToken) {
+          localStorage.setItem("refreshToken", refreshToken);
+        }
+
+        navigate('/');
+      } else {
+        console.error("Login successful but no token found in session object:", result);
+        setErrorMsg("Login failed: Invalid server response structure.");
+      }
+    } catch (error: any) {
+      console.error("Login Error:", error);
+      const errorMessage = error?.data?.message || (typeof error?.data === 'string' ? error.data : null) || error?.message || "Login failed";
+      setErrorMsg(`Login Failed: ${errorMessage}`);
+    }
   };
 
+  // ... (rest of code) ...
   const handleSendCode = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
+    setLocalLoading(true);
     setTimeout(() => {
-      setIsLoading(false);
+      setLocalLoading(false);
       setStep('forgot-code');
     }, 1000);
   };
 
   const handleVerifyCode = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
+    setLocalLoading(true);
     setTimeout(() => {
-      setIsLoading(false);
+      setLocalLoading(false);
       setStep('forgot-password');
     }, 1000);
   };
@@ -47,34 +93,32 @@ export function Login() {
       alert("Passwords do not match!");
       return;
     }
-    setIsLoading(true);
+    setLocalLoading(true);
     setTimeout(() => {
-      setIsLoading(false);
+      setLocalLoading(false);
       setStep('forgot-success');
     }, 1500);
   };
 
   return (
     <div className="min-h-screen bg-[#FDF8F6] flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Background Decor */}
-      <div className="absolute top-[-10%] right-[-5%] w-96 h-96 bg-[#FF6B35] opacity-[0.05] rounded-full blur-3xl"></div>
-      <div className="absolute bottom-[-10%] left-[-5%] w-96 h-96 bg-[#FF6B35] opacity-[0.05] rounded-full blur-3xl"></div>
-
+      {/* ... */}
       <div className="w-full max-w-md relative">
         <div className="bg-white rounded-3xl shadow-[0_20px_50px_rgba(255,107,53,0.1)] border border-white p-8 md:p-10 backdrop-blur-sm">
           {/* Logo/Brand */}
           <div className="flex flex-col items-center mb-10">
-            <div className="w-24 h-24 mb-4 transform transition-transform hover:scale-110 duration-300">
-              <img src="/logo.png" alt="DineFive Logo" className="w-full h-full object-contain" />
-            </div>
-            <h1 className="text-3xl font-bold text-gray-900 tracking-tight">DineFive</h1>
-            <p className="text-gray-500 mt-2 font-medium">
-              {step === 'login' ? 'Admin Control Center' : 'Recover your account'}
-            </p>
+            {/* ... */}
           </div>
 
           {step === 'login' && (
             <form onSubmit={handleLogin} className="space-y-6 animate-in fade-in slide-in-from-left-4 duration-300">
+              {/* Error Message Display */}
+              {errorMsg && (
+                <div className="bg-red-50 text-red-500 text-sm p-3 rounded-lg border border-red-100 flex items-center animate-in fade-in zoom-in-95 duration-200">
+                  <span className="mr-2">⚠️</span> {errorMsg}
+                </div>
+              )}
+
               <div className="space-y-2">
                 <label className="text-sm font-semibold text-gray-700 ml-1">Email Address</label>
                 <div className="relative group">
@@ -83,7 +127,10 @@ export function Login() {
                     type="email"
                     required
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      setErrorMsg("");
+                    }}
                     placeholder="admin@foodsaver.com"
                     className="w-full bg-gray-50 border border-gray-100 rounded-2xl py-4 pl-12 pr-4 outline-none focus:ring-2 focus:ring-[#FF6B35]/20 focus:border-[#FF6B35] transition-all bg-white"
                   />

@@ -17,7 +17,7 @@ import { ProfilePage } from './pages/ProfilePage';
 import { Notifications } from './pages/Notifications';
 
 export function App() {
-  return <Router>
+  return <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
     <Routes>
       <Route path="/login" element={<Login />} />
 

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { AdminLayout } from '../components/layout/AdminLayout';
 import { Button } from '../components/ui/Button';
@@ -9,11 +9,15 @@ import { Modal } from '../components/ui/Modal';
 import { Input } from '../components/ui/Input';
 import { FilterSelect } from '../components/ui/FilterSelect';
 import { SupportChatModal } from '../components/modals/SupportChatModal';
+import { CustomerReviews } from '../components/dashboard/CustomerReviews';
 import {
   ArrowLeft, MapPin, Star, Check, X, BarChart3,
   List as ListIcon, Info, Package, History, ShoppingBag, Edit2, MessageCircle,
-  Clock, ShieldAlert, DollarSign, ExternalLink, AlertTriangle, LinkIcon, Camera, LayoutGrid
+  Clock, ShieldAlert, DollarSign, ExternalLink, AlertTriangle, LayoutGrid
 } from 'lucide-react';
+
+import { useGetRestaurantStatsQuery, useGetRestaurantProfileQuery, useGetRestaurantPickupWindowsQuery, useGetRestaurantActivitySummaryQuery, useGetRestaurantLocationQuery, useGetRestaurantComplianceQuery, useBlockRestaurantMutation, useUnblockRestaurantMutation, useGetRestaurantOrdersQuery } from '../redux/features/dashboardApi';
+import { format } from 'date-fns';
 
 export function RestaurantDetail() {
   const { id } = useParams();
@@ -22,34 +26,107 @@ export function RestaurantDetail() {
   const [activeTab, setActiveTab] = useState<'details' | 'items' | 'orders' | 'reviews'>((searchParams.get('tab') as any) || 'details');
   const [itemsViewMode, setItemsViewMode] = useState<'grid' | 'list'>('grid');
   const [categoryFilter, setCategoryFilter] = useState('all');
-  const [reviewRatingFilter, setReviewRatingFilter] = useState('all');
+  const [localStatus, setLocalStatus] = useState<string | null>(null);
+
+  useEffect(() => {
+    setLocalStatus(null);
+  }, [id]);
+
+  const { data: statsData } = useGetRestaurantStatsQuery(id);
+  const { data: profileData } = useGetRestaurantProfileQuery(id);
+  const { data: pickupWindowsData } = useGetRestaurantPickupWindowsQuery(id);
+  const { data: activityData } = useGetRestaurantActivitySummaryQuery(id);
+  const { data: locationData } = useGetRestaurantLocationQuery(id);
+  const { data: complianceData } = useGetRestaurantComplianceQuery(id);
+  const { data: ordersData } = useGetRestaurantOrdersQuery(id);
+
+  const [blockRestaurant, { isLoading: isBlocking }] = useBlockRestaurantMutation();
+  const [unblockRestaurant, { isLoading: isUnblocking }] = useUnblockRestaurantMutation();
+
+  const stats = statsData?.data || {
+    totalSales: 0,
+    totalOrders: 0,
+    platformFeePerOrder: 0,
+    nextPayout: { amount: 0, scheduledAt: new Date().toISOString() }
+  };
+
+  const activitySummary = activityData?.data || {
+    listings: 0,
+    orders: 0,
+    reviews: 0
+  };
+
+  const profile = profileData?.data || {
+    cuisine: [],
+    contact: { phone: '', website: '' }
+  };
+
+  const location = locationData?.data || {
+    address: '123 Main St, New York, NY 10001',
+    lat: 0,
+    lng: 0
+  };
+
+  const compliance = complianceData?.data || {
+    alcoholNotice: { enabled: false },
+    tax: {}
+  };
+
+  const pickupWindows = (pickupWindowsData?.data || []).map((window: any) => ({
+    day: window.day,
+    hours: `${window.startTime} - ${window.endTime}`
+  }));
 
   const restaurant = {
     id,
     name: "Joe's Pizza",
     owner: 'Joe Smith',
-    status: 'Approved',
+    status: localStatus || profile.status || 'Approved', // Prioritize local status for immediate UI feedback
     rating: 4.8,
     reviews: 124,
-    address: '123 Main St, New York, NY 10001',
-    phone: '+1 (212) 555-0199',
-    website: 'www.joespizza.com',
+    address: location.address,
+    phone: profile.contact?.phone || '+1 (212) 555-0199',
+    website: profile.contact?.website || 'www.joespizza.com',
     image: 'https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=400',
-    cuisine: "Italian & American",
+    cuisine: profile.cuisine?.length > 0 ? profile.cuisine.join(' & ') : "Italian & American",
     joinedDate: "Mar 15, 2023",
-    taxRule: "US-NY Standard (8.875%)",
-    platformFee: "$0.50 per transaction",
-    pickupWindows: [
+    taxRule: compliance.tax.rule || "US-NY Standard (8.875%)",
+    platformFee: `$${stats.platformFeePerOrder} per transaction`,
+    pickupWindows: pickupWindows.length > 0 ? pickupWindows : [
       { day: "Mon - Thu", hours: "08:00 PM - 10:00 PM" },
       { day: "Fri - Sun", hours: "09:00 PM - 11:00 PM" }
     ],
     stats: {
-      totalSales: '$45,200',
-      totalOrders: 1250,
-      platformRevenue: '$625.00', // 1250 * 0.50
-      restaurantEarnings: '$44,575'
+      totalSales: `$${stats.totalSales.toLocaleString()}`,
+      totalOrders: stats.totalOrders,
+      platformRevenue: `$${(stats.totalOrders * stats.platformFeePerOrder).toFixed(2)}`,
+      restaurantEarnings: `$${(stats.totalSales - (stats.totalOrders * stats.platformFeePerOrder)).toLocaleString()}`,
+      nextPayoutAmount: `$${stats.nextPayout.amount.toFixed(2)}`,
+      nextPayoutDate: stats.nextPayout.scheduledAt ? format(new Date(stats.nextPayout.scheduledAt), 'MMM dd') : 'N/A'
     }
   };
+
+  const handleBlockToggle = async () => {
+    try {
+      if (restaurant.status.toLowerCase() === 'blocked') {
+        await unblockRestaurant(id).unwrap();
+        setLocalStatus('Approved');
+      } else {
+        await blockRestaurant(id).unwrap();
+        setLocalStatus('Blocked');
+      }
+      // Optionally add toast notification here
+    } catch (error) {
+      console.error("Failed to toggle block status", error);
+      // Handle error
+    }
+  };
+
+  // ... (rest of the component)
+  // Inside JSX:
+  // Use `compliance.alcoholNotice.enabled` to conditionally render the "Beer & Wine Notice" section if needed, or just display dynamic data.
+  // For now, I will keep the structure similar but use the fetched taxRule.
+
 
   const [listings, setListings] = useState([
     {
@@ -84,28 +161,15 @@ export function RestaurantDetail() {
     }
   ]);
 
-  const orders = [
-    { id: 'ORD-001', customer: 'John Doe', time: 'Today, 2:30 PM', status: 'Completed', amount: 5.99 },
-    { id: 'ORD-005', customer: 'Sarah Lane', time: 'Today, 11:45 AM', status: 'Pending', amount: 11.98 },
-    { id: 'ORD-008', customer: 'Mike Ross', time: 'Yesterday, 6:20 PM', status: 'Completed', amount: 5.99 }
-  ];
-
-  const [reviews, setReviews] = useState([
-    { id: 1, rating: 5, comment: 'Absolutely delicious! The food was fresh and the pickup was smooth. Will definitely order again.', customer: 'Sarah J.', date: '2 hours ago', flagged: false, reply: null as string | null },
-    { id: 2, rating: 1, comment: 'Terrible service. The food was cold and the staff was rude when I arrived for pickup.', customer: 'Mike T.', date: '5 hours ago', flagged: true, reply: null as string | null },
-    { id: 3, rating: 4, comment: 'Great value for money. Just wish the pickup window was a bit longer.', customer: 'Emily R.', date: '1 day ago', flagged: false, reply: 'Thank you for your feedback! We are working on extending our pickup windows.' }
-  ]);
+  const orders: { id: string; customer: string; time: string; status: string; amount: number }[] = (ordersData?.orders || []).map((order: any) => ({
+    id: order.orderId,
+    customer: order.customerName,
+    time: order.date ? format(new Date(order.date), 'MMM dd, hh:mm a') : 'N/A',
+    status: order.status.charAt(0).toUpperCase() + order.status.slice(1),
+    amount: order.amount
+  }));
 
   const [isChatModalOpen, setIsChatModalOpen] = useState(false);
-  const [replyText, setReplyText] = useState('');
-  const [replyingTo, setReplyingTo] = useState<number | null>(null);
-
-  const handleReplySubmit = (id: number) => {
-    setReviews(prev => prev.map(r => r.id === id ? { ...r, reply: replyText } : r));
-    setReplyingTo(null);
-    setReplyText('');
-  };
-
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<any>(null);
 
@@ -223,9 +287,9 @@ export function RestaurantDetail() {
                 <Check className="absolute -right-4 -bottom-4 h-20 w-20 text-gray-50 transition-transform group-hover:scale-110" />
                 <div>
                   <p className="text-gray-400 text-xs font-bold uppercase tracking-widest">Next Payout</p>
-                  <p className="text-3xl font-black text-blue-600 mt-2">$2,450.00</p>
+                  <p className="text-3xl font-black text-blue-600 mt-2">{restaurant.stats.nextPayoutAmount}</p>
                 </div>
-                <p className="text-[10px] text-blue-400 font-bold mt-4">Scheduled for Oct 25</p>
+                <p className="text-[10px] text-blue-400 font-bold mt-4">Scheduled for {restaurant.stats.nextPayoutDate}</p>
               </Card>
             </div>
 
@@ -300,7 +364,7 @@ export function RestaurantDetail() {
                   </div>
                   <div className="p-6 space-y-4">
                     <p className="text-xs text-gray-500 font-bold mb-4 uppercase tracking-widest">Available Pickup Slots</p>
-                    {restaurant.pickupWindows.map((slot, idx) => (
+                    {restaurant.pickupWindows.map((slot: { day: string; hours: string }, idx: number) => (
                       <div key={idx} className="p-4 bg-gray-50 rounded-2xl border border-gray-100 flex items-center justify-between">
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center border border-gray-100">
@@ -333,7 +397,7 @@ export function RestaurantDetail() {
                           <Package className="h-5 w-5 text-purple-600" />
                           <span className="text-xs font-black text-purple-900 uppercase tracking-widest">Listings</span>
                         </div>
-                        <span className="text-xl font-black text-purple-900">{listings.length} Items</span>
+                        <span className="text-xl font-black text-purple-900">{activitySummary.listings} Items</span>
                       </div>
 
                       <div className="flex justify-between items-center p-4 bg-emerald-50 rounded-2xl border border-emerald-100 group hover:border-emerald-300 transition-colors">
@@ -341,7 +405,7 @@ export function RestaurantDetail() {
                           <ShoppingBag className="h-5 w-5 text-emerald-600" />
                           <span className="text-xs font-black text-emerald-900 uppercase tracking-widest">Orders</span>
                         </div>
-                        <span className="text-xl font-black text-emerald-900">{orders.length} Total</span>
+                        <span className="text-xl font-black text-emerald-900">{activitySummary.orders} Total</span>
                       </div>
 
                       <div className="flex justify-between items-center p-4 bg-amber-50 rounded-2xl border border-amber-100 group hover:border-amber-300 transition-colors">
@@ -349,7 +413,7 @@ export function RestaurantDetail() {
                           <Star className="h-5 w-5 text-amber-600" />
                           <span className="text-xs font-black text-amber-900 uppercase tracking-widest">Reviews</span>
                         </div>
-                        <span className="text-xl font-black text-amber-900">{reviews.length} Feedbacks</span>
+                        <span className="text-xl font-black text-amber-900">{activitySummary.reviews} Feedbacks</span>
                       </div>
                     </div>
                   </div>
@@ -375,8 +439,13 @@ export function RestaurantDetail() {
                 </Card>
 
                 <div className="pt-4 space-y-4">
-                  <Button variant="danger" className="w-full shadow-2xl shadow-red-500/20 py-6 text-sm uppercase tracking-widest font-black rounded-3xl">
-                    Block Restaurant Account
+                  <Button
+                    variant={restaurant.status.toLowerCase() === 'blocked' ? 'secondary' : 'danger'}
+                    className={`w-full shadow-2xl ${restaurant.status.toLowerCase() === 'blocked' ? 'shadow-gray-500/20' : 'shadow-red-500/20'} py-6 text-sm uppercase tracking-widest font-black rounded-3xl`}
+                    onClick={handleBlockToggle}
+                    disabled={isBlocking || isUnblocking}
+                  >
+                    {isBlocking || isUnblocking ? 'Processing...' : (restaurant.status.toLowerCase() === 'blocked' ? 'Unblock Restaurant Account' : 'Block Restaurant Account')}
                   </Button>
                   <p className="text-center text-[10px] text-gray-400 font-bold px-4 uppercase leading-relaxed">
                     Admin Control: Blocking this account will suspend all active food listings and prevent further surplus food recovery.
@@ -537,7 +606,16 @@ export function RestaurantDetail() {
                 { header: 'Time', accessorKey: 'time', className: 'text-gray-500' },
                 {
                   header: 'Status',
-                  cell: (item) => <Badge variant={item.status === 'Completed' ? 'success' : 'warning'}>{item.status}</Badge>
+                  cell: (item) => {
+                    const status = item.status.toLowerCase();
+                    let variant: 'success' | 'warning' | 'error' | 'info' | 'default' = 'default';
+                    if (status === 'completed') variant = 'success';
+                    else if (status === 'pending' || status === 'preparing') variant = 'warning';
+                    else if (status === 'ready_for_pickup') variant = 'info';
+                    else if (status === 'cancelled') variant = 'error';
+
+                    return <Badge variant={variant}>{item.status}</Badge>;
+                  }
                 },
                 {
                   header: 'Amount',
@@ -553,121 +631,8 @@ export function RestaurantDetail() {
         )}
 
         {activeTab === 'reviews' && (
-          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between pb-6 border-b border-gray-100 mb-8">
-              <h3 className="font-bold text-gray-900">Customer Reviews</h3>
-              <div className="flex items-center gap-3 w-full md:w-auto">
-                <FilterSelect
-                  label="Rating"
-                  icon={Star}
-                  value={reviewRatingFilter}
-                  onChange={setReviewRatingFilter}
-                  options={[
-                    { label: 'All Ratings', value: 'all' },
-                    { label: '5 Stars', value: '5' },
-                    { label: '4 Stars', value: '4' },
-                    { label: '3 Stars', value: '3' },
-                    { label: '2 Stars', value: '2' },
-                    { label: '1 Star', value: '1' },
-                  ]}
-                />
-              </div>
-            </div>
-
-            <div className="space-y-8">
-              {reviews
-                .filter(review => {
-                  if (reviewRatingFilter === 'all') return true;
-                  return review.rating === parseInt(reviewRatingFilter);
-                })
-                .map((review, idx) => (
-                  <div key={review.id} className="group border-b border-gray-100 last:border-0 pb-8 last:pb-0">
-                    {/* Header */}
-                    <div className="flex justify-between items-start mb-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center text-lg font-black text-gray-400 border border-gray-100 shadow-sm shrink-0">
-                          {review.customer.charAt(0)}
-                        </div>
-                        <div>
-                          <p className="font-bold text-gray-900 leading-snug">
-                            {review.customer}
-                          </p>
-                          <p className="text-xs text-gray-500 font-medium mt-0.5">
-                            Verified Order • <span className="text-[#FF6B35]">3 items</span>
-                          </p>
-                        </div>
-                      </div>
-                      <span className="text-xs font-medium text-gray-400">{review.date}</span>
-                    </div>
-
-                    {/* Rating */}
-                    <div className="flex items-center mb-4 pl-[60px]">
-                      {[...Array(5)].map((_, i) => (
-                        <Star key={i} className={`h-4 w-4 ${i < (review.rating || 5) ? 'text-yellow-400 fill-yellow-400' : 'text-gray-200'} mr-0.5`} />
-                      ))}
-                    </div>
-
-                    {/* Comment Bubble */}
-                    <div className="ml-[60px] mb-4">
-                      <div className="bg-gray-50 rounded-2xl rounded-tl-none p-5 text-gray-700 italic border border-gray-100/50 shadow-sm relative">
-                        "{review.comment}"
-                      </div>
-                    </div>
-
-                    {/* Mock Images (Add to first review for demo) */}
-                    {idx === 0 && (
-                      <div className="ml-[60px] mb-4 flex gap-3 overflow-x-auto pb-1">
-                        {['https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=200', 'https://images.unsplash.com/photo-1571997478779-2adcbbe9ab2f?w=200'].map((img, i) => (
-                          <div key={i} className="relative flex-shrink-0 w-24 h-24 rounded-2xl overflow-hidden border-2 border-gray-100 cursor-zoom-in hover:border-[#FF6B35]/30 transition-colors shadow-sm">
-                            <img src={img} alt="" className="w-full h-full object-cover" />
-                          </div>
-                        ))}
-                      </div>
-                    )}
-
-                    {/* Admin Reply Section */}
-                    <div className="ml-[60px]">
-                      {review.reply ? (
-                        <div className="mt-4 pl-4 border-l-2 border-[#FF6B35]">
-                          <p className="text-xs font-bold text-[#FF6B35] mb-1">Restaurant Response</p>
-                          <p className="text-sm text-gray-600 italic">"{review.reply}"</p>
-                        </div>
-                      ) : replyingTo === review.id ? (
-                        <div className="mt-4 space-y-3">
-                          <textarea
-                            value={replyText}
-                            onChange={(e) => setReplyText(e.target.value)}
-                            placeholder="Type your reply..."
-                            className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#FF6B35]/20 focus:border-[#FF6B35] outline-none transition-all resize-y min-h-[80px]"
-                            autoFocus
-                          />
-                          <div className="flex gap-2">
-                            <Button size="sm" onClick={() => handleReplySubmit(review.id)}>
-                              Send Reply
-                            </Button>
-                            <Button size="sm" variant="ghost" onClick={() => { setReplyingTo(null); setReplyText(''); }}>
-                              Cancel
-                            </Button>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="mt-4">
-                          <button
-                            onClick={() => {
-                              setReplyingTo(review.id);
-                              setReplyText('');
-                            }}
-                            className="flex items-center gap-2 text-xs font-bold text-gray-400 hover:text-[#FF6B35] transition-colors py-2 px-3 rounded-lg hover:bg-orange-50 w-fit"
-                          >
-                            <MessageCircle className="h-3.5 w-3.5" />
-                            Reply to Review
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))}
-            </div>
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <CustomerReviews restaurantId={id} />
           </div>
         )}
       </div >

@@ -12,6 +12,7 @@ import { ShoppingBag, Users, DollarSign } from 'lucide-react';
 import { Table } from '../components/ui/Table';
 import { Badge } from '../components/ui/Badge';
 import { GlobalFilter, FilterRange } from '../components/ui/GlobalFilter';
+import { useGetDashboardStatsQuery, useGetRevenueStatsQuery, useGetOrderStatsQuery, useGetRecentOrdersQuery } from '../redux/features/dashboardApi';
 
 // Base data for different time periods
 const baseKPIData = {
@@ -134,13 +135,7 @@ const baseOrderStatusData = {
   ],
 };
 
-const topRestaurants = [
-  { id: '1', name: "Joe's Pizza", orders: 1250, revenue: 45200 },
-  { id: '2', name: 'Sushi World', orders: 980, revenue: 38400 },
-  { id: '3', name: 'Burger King', orders: 850, revenue: 22100 },
-  { id: '4', name: 'Taco Bell', orders: 720, revenue: 18500 },
-  { id: '5', name: 'Sunset Cafe', orders: 650, revenue: 15200 }
-];
+
 
 const recentOrders = [{
   id: 'ORD1025',
@@ -173,20 +168,70 @@ const recentOrders = [{
 
 export function Dashboard() {
   const navigate = useNavigate();
-  const [timeFilter, setTimeFilter] = useState<FilterRange>('week');
+  const [timeFilter, setTimeFilter] = useState<FilterRange>('month');
 
   // Dynamically compute data based on selected filter
+  const { data: analyticsData, error } = useGetDashboardStatsQuery(timeFilter);
+
+  if (error) console.error("Dashboard Analytics Error:", error);
+  console.log("Dashboard Analytics Data:", analyticsData);
+
   const kpiData = useMemo(() => {
+    if (analyticsData?.data) {
+      const { totalOrders, totalCustomers, totalRevenue } = analyticsData.data;
+      return [
+        { title: 'Total Orders', value: totalOrders?.toLocaleString() ?? '0', change: '0%', trend: 'up' as const, icon: ShoppingBag, color: 'orange' as const },
+        { title: 'Total Customers', value: totalCustomers?.toLocaleString() ?? '0', change: '0%', trend: 'up' as const, icon: Users, color: 'orange' as const },
+        { title: 'Total Revenue', value: `$${totalRevenue?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) ?? '0.00'}`, change: '0%', trend: 'up' as const, icon: DollarSign, color: 'orange' as const },
+      ];
+    }
     return baseKPIData[timeFilter] || baseKPIData.week;
-  }, [timeFilter]);
+  }, [timeFilter, analyticsData]);
+
+  // Revenue Data
+  const { data: revenueStats } = useGetRevenueStatsQuery(timeFilter);
 
   const revenueData = useMemo(() => {
+    if (revenueStats?.data) {
+      return revenueStats.data.labels.map((label: string, index: number) => ({
+        name: label,
+        income: revenueStats.data.values[index]
+      }));
+    }
     return baseRevenueData[timeFilter] || baseRevenueData.week;
-  }, [timeFilter]);
+  }, [timeFilter, revenueStats]);
+
+  // Order Data
+  const { data: orderStats } = useGetOrderStatsQuery(timeFilter);
 
   const orderStatusData = useMemo(() => {
+    if (orderStats?.data) {
+      return orderStats.data.labels.map((label: string, index: number) => ({
+        name: label,
+        value: orderStats.data.values[index]
+      }));
+    }
     return baseOrderStatusData[timeFilter] || baseOrderStatusData.week;
-  }, [timeFilter]);
+  }, [timeFilter, orderStats]);
+
+  // Recent Orders Data
+  const { data: recentOrdersData } = useGetRecentOrdersQuery({});
+
+  const formattedRecentOrders = useMemo(() => {
+    if (recentOrdersData?.data) {
+      return recentOrdersData.data.map((order: any) => ({
+        id: order.orderId,
+        menu: order.menu?.title || 'Unknown Item',
+        category: '', // API doesn't provide category yet
+        qty: order.quantity,
+        amount: `$${order.totalPrice.toFixed(2)}`,
+        customer: order.customerName,
+        status: order.status.charAt(0).toUpperCase() + order.status.slice(1), // Capitalize
+        img: order.menu?.image || 'https://via.placeholder.com/100', // Fallback image
+      }));
+    }
+    return [];
+  }, [recentOrdersData]);
 
   return <AdminLayout>
     <div className="flex flex-col gap-8">
@@ -215,7 +260,12 @@ export function Dashboard() {
 
           {/* Charts Row 1 - Total Revenue Full Width */}
           <div className="h-[400px]">
-            <LineChart title="Total Revenue" data={revenueData} height={300} />
+            <LineChart
+              title="Total Revenue"
+              data={revenueData}
+              height={300}
+              lines={[{ key: 'income', color: '#FF6B35', name: 'Revenue' }]}
+            />
           </div>
 
           {/* Charts Row 2 - Orders Overview */}
@@ -237,12 +287,12 @@ export function Dashboard() {
               </button>
             </div>
             <Table
-              data={recentOrders.slice(0, 5)}
+              data={formattedRecentOrders.length > 0 ? formattedRecentOrders : recentOrders.slice(0, 5)}
               onRowClick={(item) => navigate(`/orders/${item.id}`)}
               columns={[{
                 header: 'Order ID',
                 accessorKey: 'id',
-                cell: item => (
+                cell: (item: any) => (
                   <button
                     onClick={() => navigate(`/orders/${item.id}`)}
                     className="text-[#FF6B35] hover:text-[#E85A2D] font-medium hover:underline transition-colors"
@@ -252,7 +302,7 @@ export function Dashboard() {
                 )
               }, {
                 header: 'Menu',
-                cell: item => <div className="flex items-center gap-3">
+                cell: (item: any) => <div className="flex items-center gap-3">
                   <img src={item.img} alt="" className="w-10 h-10 rounded-lg object-cover" />
                   <div>
                     <p className="font-medium text-gray-900">{item.menu}</p>
@@ -265,7 +315,7 @@ export function Dashboard() {
               }, {
                 header: 'Amount',
                 accessorKey: 'amount',
-                cell: item => <span className="font-medium text-[#FF6B35]">
+                cell: (item: any) => <span className="font-medium text-[#FF6B35]">
                   {item.amount}
                 </span>
               }, {
@@ -273,7 +323,7 @@ export function Dashboard() {
                 accessorKey: 'customer'
               }, {
                 header: 'Status',
-                cell: item => <Badge variant={item.status === 'Completed' ? 'success' : item.status === 'Cancelled' ? 'error' : 'warning'}>
+                cell: (item: any) => <Badge variant={item.status === 'Completed' ? 'success' : item.status === 'Cancelled' ? 'error' : 'warning'}>
                   {item.status}
                 </Badge>
               }]} />
@@ -287,7 +337,7 @@ export function Dashboard() {
         {/* Right Sidebar (Unified) */}
         <div className="w-full xl:w-80 space-y-8">
           <TrendingWidget />
-          <TopRestaurants data={topRestaurants} />
+          <TopRestaurants />
           <ActivityFeed />
         </div>
       </div>
