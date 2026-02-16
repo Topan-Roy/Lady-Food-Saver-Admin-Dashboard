@@ -133,9 +133,9 @@ export function RestaurantDetail() {
       pickupWindows.length > 0
         ? pickupWindows
         : [
-            { day: "Mon - Thu", hours: "08:00 PM - 10:00 PM" },
-            { day: "Fri - Sun", hours: "09:00 PM - 11:00 PM" },
-          ],
+          { day: "Mon - Thu", hours: "08:00 PM - 10:00 PM" },
+          { day: "Fri - Sun", hours: "09:00 PM - 11:00 PM" },
+        ],
     stats: {
       totalSales: `$${(stats.totalSales || 0).toLocaleString()}`,
       totalOrders: stats.totalOrders || 0,
@@ -619,7 +619,7 @@ export function RestaurantDetail() {
                     <Button
                       variant={
                         (restaurant.status || "").toString().toLowerCase() ===
-                        "blocked"
+                          "blocked"
                           ? "secondary"
                           : "danger"
                       }
@@ -630,7 +630,7 @@ export function RestaurantDetail() {
                       {isBlocking || isUnblocking
                         ? "Processing..."
                         : (restaurant.status || "").toString().toLowerCase() ===
-                            "blocked"
+                          "blocked"
                           ? "Unblock Restaurant Account"
                           : "Block Restaurant Account"}
                     </Button>

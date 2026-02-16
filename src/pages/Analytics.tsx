@@ -10,6 +10,7 @@ import { Leaf, DollarSign, Utensils } from 'lucide-react';
 import { GlobalFilter, FilterRange } from '../components/ui/GlobalFilter';
 
 import { useGetCustomerFeedbackQuery, useGetTopPerformingRestaurantsQuery, useGetAnalyticsOverviewQuery } from '../redux/features/analytics';
+import { useGetOrderStatsQuery } from '../redux/features/dashboardApi';
 
 const mockData = {
   'today': {
@@ -64,7 +65,35 @@ export function Analytics() {
   const { data: topRestaurantsResponse, isLoading: topRestaurantsLoading } = useGetTopPerformingRestaurantsQuery({ page: 1, limit: 5 });
 
   // Fetch analytics overview data
+  // Fetch analytics overview data
   const { data: analyticsOverview, isLoading: analyticsLoading } = useGetAnalyticsOverviewQuery(selectedProviderId);
+
+  // Determine API filter based on timeFilter
+  const apiFilter = useMemo(() => {
+    const map: Record<string, string> = {
+      'today': 'today',
+      '7d': 'week',
+      '30d': 'month',
+      '12m': 'year',
+      'year': 'year',
+      'custom': 'year'
+    };
+    return map[timeFilter] || 'week';
+  }, [timeFilter]);
+
+  // Fetch Order Stats
+  const { data: ordersResponse, isLoading: isOrdersLoading } = useGetOrderStatsQuery(apiFilter);
+
+  // Transform Order Data
+  const orderStatsData = useMemo(() => {
+    if (!ordersResponse?.data?.values) return data.sales;
+
+    const { labels, values } = ordersResponse.data;
+    return labels.map((label: string, index: number) => ({
+      name: label,
+      orders: values[index] || 0
+    }));
+  }, [ordersResponse, data.sales]);
 
   useEffect(() => {
     // Determine which dataset to use based on filter
@@ -155,7 +184,12 @@ export function Analytics() {
       {/* Charts Grid Row 1 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="h-[400px]">
-          <LineChart title="Orders Overview" data={data.sales} height={350} />
+          <LineChart
+            title="Orders Overview"
+            data={orderStatsData}
+            height={350}
+            lines={[{ key: 'orders', color: '#FF6B35', name: 'Orders' }]}
+          />
         </div>
         <div className="h-[400px]">
           <BarChart title="State-based Analysis" data={data.states} height={350} />
