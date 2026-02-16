@@ -4,8 +4,8 @@ import { LogIn, Mail, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react';
 import { useDispatch } from 'react-redux';
 
 
-import { setLogin } from '@/redux/slices/authSlice';
-import { useLoginMutation } from '@/redux/api/authApi';
+import { setLogin, logout } from '@/redux/slices/authSlice';
+import { useLoginMutation, useForgotPasswordMutation, useVerifyForgotOtpMutation, useResetPasswordMutation } from '@/redux/api/authApi';
 
 export function Login() {
   const [showPassword, setShowPassword] = useState(false);
@@ -14,6 +14,7 @@ export function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [code, setCode] = useState('');
+  const [resetToken, setResetToken] = useState<string | null>(null);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const navigate = useNavigate();
@@ -21,8 +22,11 @@ export function Login() {
   const [errorMsg, setErrorMsg] = useState("");
   const dispatch = useDispatch();
   const [login, { isLoading: isLoginLoading }] = useLoginMutation();
+  const [forgotPassword, { isLoading: isForgotLoading }] = useForgotPasswordMutation();
+  const [verifyForgotOtp, { isLoading: isVerifyLoading }] = useVerifyForgotOtpMutation();
+  const [resetPassword, { isLoading: isResetLoading }] = useResetPasswordMutation();
 
-  const isLoading = localLoading || isLoginLoading;
+  const isLoading = localLoading || isLoginLoading || isForgotLoading || isVerifyLoading || isResetLoading;
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,35 +73,66 @@ export function Login() {
   };
 
   // ... (rest of code) ...
-  const handleSendCode = (e: React.FormEvent) => {
+  const handleSendCode = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLocalLoading(true);
-    setTimeout(() => {
-      setLocalLoading(false);
+    setErrorMsg("");
+
+    // Clear any existing auth state to prevent interference with reset flow
+    dispatch(logout());
+    localStorage.removeItem("token");
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("isAuthenticated"); // Just in case
+
+    try {
+      await forgotPassword({ email }).unwrap();
       setStep('forgot-code');
-    }, 1000);
+    } catch (error: any) {
+      console.error("Forgot Password Error:", error);
+      setErrorMsg(error?.data?.message || "Failed to send verification code");
+    }
   };
 
-  const handleVerifyCode = (e: React.FormEvent) => {
+  const handleVerifyCode = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLocalLoading(true);
-    setTimeout(() => {
-      setLocalLoading(false);
-      setStep('forgot-password');
-    }, 1000);
+    setErrorMsg("");
+    try {
+      const result = await verifyForgotOtp({ email, otp: code }).unwrap();
+      const accessToken = result.data?.accessToken || result.accessToken;
+
+      if (accessToken) {
+        setResetToken(accessToken);
+        setStep('forgot-password');
+      } else {
+        setErrorMsg("Failed to retrieve reset token.");
+      }
+    } catch (error: any) {
+      console.error("Verify OTP Error:", error);
+      setErrorMsg(error?.data?.message || "Invalid verification code");
+    }
   };
 
-  const handleResetPassword = (e: React.FormEvent) => {
+  const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMsg("");
     if (newPassword !== confirmPassword) {
-      alert("Passwords do not match!");
+      setErrorMsg("Passwords do not match!");
       return;
     }
-    setLocalLoading(true);
-    setTimeout(() => {
-      setLocalLoading(false);
+
+    if (!resetToken) {
+      setErrorMsg("Reset token missing. Please verify OTP again.");
+      return;
+    }
+
+    try {
+      await resetPassword({ newPassword, confirmPassword, token: resetToken }).unwrap();
+      // Clear token after success
+      setResetToken(null);
       setStep('forgot-success');
-    }, 1500);
+    } catch (error: any) {
+      console.error("Reset Password Error:", error);
+      setErrorMsg(error?.data?.message || "Failed to reset password");
+    }
   };
 
   return (
@@ -336,7 +371,7 @@ export function Login() {
         {/* Footer info */}
         <p className="text-center mt-8 text-gray-400 text-sm">
           Protected by industry standard encryption.<br />
-          &copy; 2024 DineFive Admin. All rights reserved.
+          &copy; {new Date().getFullYear()} DineFive Admin. All rights reserved.
         </p>
       </div>
     </div>
