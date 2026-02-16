@@ -3,6 +3,7 @@ import { Upload, X } from 'lucide-react';
 import { Modal } from '../ui/Modal';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
+import { useAddBannerMutation } from '../../redux/features/banner';
 
 interface UploadBannerModalProps {
     isOpen: boolean;
@@ -12,6 +13,17 @@ interface UploadBannerModalProps {
 export function UploadBannerModal({ isOpen, onClose }: UploadBannerModalProps) {
     const [title, setTitle] = useState('');
     const [image, setImage] = useState<File | null>(null);
+    const [error, setError] = useState<string | null>(null);
+    const [startTime, setStartTime] = useState(() => {
+        const d = new Date();
+        return d.toISOString().split('T')[0];
+    });
+    const [endTime, setEndTime] = useState(() => {
+        const d = new Date();
+        d.setDate(d.getDate() + 7);
+        return d.toISOString().split('T')[0];
+    });
+    const [addBanner, { isLoading }] = useAddBannerMutation();
 
     const handleDragOver = (e: React.DragEvent) => {
         e.preventDefault();
@@ -19,26 +31,98 @@ export function UploadBannerModal({ isOpen, onClose }: UploadBannerModalProps) {
 
     const handleDrop = (e: React.DragEvent) => {
         e.preventDefault();
+        setError(null);
         if (e.dataTransfer.files && e.dataTransfer.files[0]) {
             setImage(e.dataTransfer.files[0]);
         }
     };
 
     const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setError(null);
         if (e.target.files && e.target.files[0]) {
             setImage(e.target.files[0]);
         }
     };
 
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!image || !title) return;
+        setError(null);
+
+        if (new Date(endTime) <= new Date(startTime)) {
+            setError('End time must be after start time');
+            return;
+        }
+
+        try {
+            // Step 1: Upload image to ImgBB to get a URL
+            const formData = new FormData();
+            formData.append('image', image);
+
+            // Using ImgBB free API (you can replace with your own upload endpoint)
+            const imgbbApiKey = import.meta.env.VITE_IMGBB_API_KEY;
+            const uploadResponse = await fetch(
+                `https://api.imgbb.com/1/upload?key=${imgbbApiKey}`,
+                {
+                    method: 'POST',
+                    body: formData,
+                }
+            );
+
+            if (!uploadResponse.ok) {
+                throw new Error('Failed to upload image');
+            }
+
+            const uploadData = await uploadResponse.json();
+            const imageUrl = uploadData.data.url;
+
+            // Step 2: Format dates to DD-MM-YYYY (Required by backend validation)
+            const formatDate = (dateStr: string) => {
+                if (!dateStr) return '';
+                const [year, month, day] = dateStr.split('-');
+                return `${day}-${month}-${year}`;
+            };
+
+            const startFormatted = formatDate(startTime);
+            const endFormatted = formatDate(endTime);
+
+            // Step 3: Create banner with the image URL
+            const bannerData = {
+                title,
+                bannerImage: imageUrl,
+                startTime: startFormatted,
+                endTime: endFormatted,
+                status: 'ACTIVE'
+            };
+
+            console.log('Sending Banner Payload:', bannerData);
+
+            await addBanner(bannerData).unwrap();
+            setTitle('');
+            setImage(null);
+            onClose();
+        } catch (err: any) {
+            console.error('Upload failed details:', {
+                status: err?.status,
+                data: err?.data,
+                message: err?.message
+            });
+            setError(err?.data?.message || err?.message || 'Failed to upload banner.');
+        }
+    };
+
+
     return (
         <Modal isOpen={isOpen} onClose={onClose} title="Upload Banner">
             <form
                 className="space-y-6"
-                onSubmit={(e) => {
-                    e.preventDefault();
-                    onClose();
-                }}
+                onSubmit={handleSubmit}
             >
+                {error && (
+                    <div className="p-4 bg-red-50 border border-red-100 rounded-2xl text-red-600 text-sm font-bold">
+                        {error}
+                    </div>
+                )}
                 <div
                     className="relative border-2 border-dashed border-gray-200 rounded-3xl p-12 text-center transition-colors hover:border-[#E4983A] group cursor-pointer"
                     onDragOver={handleDragOver}
@@ -96,6 +180,31 @@ export function UploadBannerModal({ isOpen, onClose }: UploadBannerModalProps) {
                     />
                 </div>
 
+                <div className="grid grid-cols-2 gap-4">
+                    <div>
+                        <label className="block text-sm font-bold text-gray-700 mb-2">
+                            Start Date
+                        </label>
+                        <Input
+                            type="date"
+                            value={startTime}
+                            onChange={(e) => setStartTime(e.target.value)}
+                            className="rounded-2xl"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-bold text-gray-700 mb-2">
+                            End Date
+                        </label>
+                        <Input
+                            type="date"
+                            value={endTime}
+                            onChange={(e) => setEndTime(e.target.value)}
+                            className="rounded-2xl"
+                        />
+                    </div>
+                </div>
+
                 <div className="flex justify-end gap-3 pt-4 border-t border-gray-50">
                     <Button
                         type="button"
@@ -108,9 +217,9 @@ export function UploadBannerModal({ isOpen, onClose }: UploadBannerModalProps) {
                     <Button
                         type="submit"
                         className="px-8 rounded-2xl bg-[#E4983A] hover:bg-[#E4983A]"
-                        disabled={!image || !title}
+                        disabled={!image || !title || isLoading}
                     >
-                        Upload Banner
+                        {isLoading ? 'Uploading...' : 'Upload Banner'}
                     </Button>
                 </div>
             </form>
