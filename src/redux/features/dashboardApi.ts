@@ -101,8 +101,8 @@ export const dashboardApi = baseApi.injectEndpoints({
             invalidatesTags: ["dashboardStats"],
         }),
         getCustomers: builder.query({
-            query: ({ status = 'all_status', page = 1, limit = 10 }) =>
-                `/admin/users/customers?status=${status}&page=${page}&limit=${limit}`,
+            query: ({ page = 1, limit = 10 }) =>
+                `/admin/customers/dashboard/customersAll?page=${page}&limit=${limit}`,
             providesTags: ["admin-users"],
         }),
         blockCustomer: builder.mutation({
@@ -122,7 +122,11 @@ export const dashboardApi = baseApi.injectEndpoints({
             invalidatesTags: ["admin-users"],
         }),
         getSingleCustomer: builder.query({
-            query: (id) => `/admin/users/customers/${id}`,
+            query: (id) => `/admin/customers/dashboard/${id}?page=1&limit=10`,
+            providesTags: (_result, _error, id) => [{ type: "admin-users", id }],
+        }),
+        getCustomerProfile: builder.query({
+            query: (id) => `/admin/customers/dashboard/admin/${id}/profile`,
             providesTags: (_result, _error, id) => [{ type: "admin-users", id }],
         }),
         getTransactionOrders: builder.query({
@@ -133,4 +137,4 @@ export const dashboardApi = baseApi.injectEndpoints({
     }),
 });
 
-export const { useGetDashboardStatsQuery, useGetRevenueStatsQuery, useGetOrderStatsQuery, useGetRecentOrdersQuery, useGetActivitiesQuery, useGetTopRestaurantsQuery, useGetTrendingMenusQuery, useGetRestaurantStatsQuery, useGetRestaurantProfileQuery, useGetRestaurantPickupWindowsQuery, useGetRestaurantActivitySummaryQuery, useGetRestaurantLocationQuery, useGetRestaurantComplianceQuery, useBlockRestaurantMutation, useUnblockRestaurantMutation, useGetRestaurantOrdersQuery, useGetRestaurantReviewsQuery, useGetGlobalReviewsQuery, useGetAllRestaurantsQuery, useApproveRestaurantMutation, useRejectRestaurantMutation, useGetCustomersQuery, useBlockCustomerMutation, useUnblockCustomerMutation, useGetSingleCustomerQuery, useGetTransactionOrdersQuery } = dashboardApi;
+export const { useGetDashboardStatsQuery, useGetRevenueStatsQuery, useGetOrderStatsQuery, useGetRecentOrdersQuery, useGetActivitiesQuery, useGetTopRestaurantsQuery, useGetTrendingMenusQuery, useGetRestaurantStatsQuery, useGetRestaurantProfileQuery, useGetRestaurantPickupWindowsQuery, useGetRestaurantActivitySummaryQuery, useGetRestaurantLocationQuery, useGetRestaurantComplianceQuery, useBlockRestaurantMutation, useUnblockRestaurantMutation, useGetRestaurantOrdersQuery, useGetRestaurantReviewsQuery, useGetGlobalReviewsQuery, useGetAllRestaurantsQuery, useApproveRestaurantMutation, useRejectRestaurantMutation, useGetCustomersQuery, useBlockCustomerMutation, useUnblockCustomerMutation, useGetSingleCustomerQuery, useGetCustomerProfileQuery, useGetTransactionOrdersQuery } = dashboardApi;

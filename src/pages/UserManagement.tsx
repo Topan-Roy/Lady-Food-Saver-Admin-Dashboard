@@ -28,7 +28,6 @@ export function UserManagement() {
 
   // API Hooks for Customers
   const { data: customersDataAPI, isLoading: isCustomersLoading } = useGetCustomersQuery({
-    status: statusFilter,
     page: 1,
     limit: 50
   }, { skip: activeTab !== 'customers' });
@@ -103,16 +102,16 @@ export function UserManagement() {
   const customerData = useMemo(() => {
     if (!customersDataAPI?.data) return [];
     return customersDataAPI.data.map((c: any) => ({
-      id: c._id || c.userId || c.id, // Primary ID for URL
+      id: c.restaurantId || c._id || c.id,
       _id: c._id,
       userId: c.userId,
       originalId: c.id,
-      name: c.fullName || 'N/A',
-      email: c.phoneNumber || 'N/A', // Using phoneNumber as Email alternative if missing
-      orders: c.totalUpload?.totalService || 0,
-      reviews: c.reviews?.totalReviews || 0,
-      status: c.status || (c.isBlocked ? 'Blocked' : 'Active'),
-      isBlocked: c.isBlocked || false
+      name: c.owner?.name || c.fullName || 'N/A',
+      email: c.owner?.email || c.phoneNumber || 'N/A',
+      orders: c.totalListings || c.totalUpload?.totalService || 0,
+      reviews: c.ratings || c.reviews?.totalReviews || 0,
+      status: c.status === 'approved' ? 'Active' : c.status === 'blocked' ? 'Blocked' : (c.status || 'Active'),
+      isBlocked: c.status === 'blocked'
     }));
   }, [customersDataAPI]);
 
