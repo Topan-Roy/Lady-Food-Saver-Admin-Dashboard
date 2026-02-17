@@ -4,15 +4,15 @@ import baseApi from "../api/baseApi";
 export const analyticsApi = baseApi.injectEndpoints({
     endpoints: (builder) => ({
         getCustomerFeedback: builder.query({
-            query: (providerId) => `/admin/feedback?providerId=${providerId}`,
+            query: (providerId) => `/api/v1/admin/feedback?providerId=${providerId}`,
             providesTags: ["RestaurantProfile"],
         }),
         getTopPerformingRestaurants: builder.query({
-            query: ({ page = 1, limit = 5 }) => `/admin/top-restaurants?page=${page}&limit=${limit}`,
+            query: ({ page = 1, limit = 5 }) => `/api/v1/admin/top-restaurants?page=${page}&limit=${limit}`,
             providesTags: ["dashboardStats"],
         }),
         getAnalyticsOverview: builder.query({
-            query: (providerId) => `/admin/analytics?providerId=${providerId}`,
+            query: (providerId) => `/api/v1/admin/analytics?providerId=${providerId}`,
             providesTags: ["dashboardStats", "RestaurantProfile"],
         }),
     }),
