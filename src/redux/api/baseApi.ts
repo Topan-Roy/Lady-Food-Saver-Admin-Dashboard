@@ -110,7 +110,7 @@ const baseQueryWithReauth = async (args: any, api: any, extraOptions: any) => {
 export const baseApi = createApi({
     reducerPath: "baseApi",
     baseQuery: baseQueryWithReauth,
-    tagTypes: ["auth", "dashboardStats", "admin-users", "earnings-overview", "Faqs", "payments", "RestaurantProfile", "Banners"],
+    tagTypes: ["auth", "dashboardStats", "admin-users", "earnings-overview", "Faqs", "payments", "RestaurantProfile", "Banners", "LegalDocuments"],
     endpoints: () => ({}),
     // Global configuration for refetch behavior
     keepUnusedDataFor: 0, // Don't keep unused data in cache
