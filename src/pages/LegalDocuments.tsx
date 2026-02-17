@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { AdminLayout } from '../components/layout/AdminLayout';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
@@ -6,7 +6,7 @@ import { Table } from '../components/ui/Table';
 import { Badge } from '../components/ui/Badge';
 import { Modal } from '../components/ui/Modal';
 import { Input } from '../components/ui/Input';
-import { Upload, FileText, Trash2, Download, AlertCircle, Loader2, X, Check } from 'lucide-react';
+import { Upload, FileText, Trash2, Download, AlertCircle, Loader2, Check } from 'lucide-react';
 import {
     useGetLegalDocumentsQuery,
     useDeleteLegalDocumentMutation,
@@ -15,7 +15,7 @@ import {
 import { format } from 'date-fns';
 
 export function LegalDocuments() {
-    const { data: legalResponse, isLoading } = useGetLegalDocumentsQuery(undefined);
+    const { data: legalResponse, isLoading, error: fetchError } = useGetLegalDocumentsQuery(undefined);
     const [deleteLegalDocument, { isLoading: isDeleting }] = useDeleteLegalDocumentMutation();
     const [createLegalDocument, { isLoading: isCreating }] = useCreateLegalDocumentMutation();
 
@@ -30,17 +30,48 @@ export function LegalDocuments() {
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
+    // Debugging: Log any errors
+    useEffect(() => {
+        if (fetchError) {
+            console.error("LegalDocuments Fetch Error:", fetchError);
+        }
+    }, [fetchError]);
+
     const documents = useMemo(() => {
-        if (!legalResponse?.data) return [];
-        return legalResponse.data.map((doc: any) => ({
-            id: doc.id || doc._id,
-            name: doc.DocumentName,
-            type: doc.Type,
-            size: doc.Size || doc.Siye,
-            uploadedDate: doc.uplodeDate || doc.createdAt ? format(new Date(doc.uplodeDate || doc.createdAt), 'MMM dd, yyyy') : 'N/A',
-            status: doc.Status,
-            url: doc.fileUrl
-        }));
+        // According to user provided structure: response.data.documents
+        const docsArray = legalResponse?.data?.documents || legalResponse?.data || [];
+
+        if (!Array.isArray(docsArray)) {
+            console.warn("LegalDocuments: unexpected data format", legalResponse);
+            return [];
+        }
+
+        return docsArray.map((doc: any) => {
+            // Safer date parsing
+            let formattedDate = 'N/A';
+            try {
+                // User provided 'LastUpdated'
+                const dateStr = doc.LastUpdated || doc.uplodeDate || doc.createdAt || doc.updatedAt;
+                if (dateStr) {
+                    const dateObj = new Date(dateStr);
+                    if (!isNaN(dateObj.getTime())) {
+                        formattedDate = format(dateObj, 'MMM dd, yyyy');
+                    }
+                }
+            } catch (e) {
+                console.error("Error formatting date for doc", doc.id, e);
+            }
+
+            return {
+                id: doc.id || doc._id || Math.random().toString(),
+                name: doc.DocumentName || 'Untitled Document',
+                type: doc.Type || 'FILE',
+                size: doc.Size || doc.Siye || '0 KB',
+                uploadedDate: formattedDate,
+                status: doc.Status || 'Active',
+                url: doc.fileUrl || ''
+            };
+        });
     }, [legalResponse]);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -64,16 +95,17 @@ export function LegalDocuments() {
                 DocumentName: uploadName,
                 Type: selectedFile.name.split('.').pop()?.toUpperCase() || 'FILE',
                 Siye: `${sizeInMb} MB`,
-                fileUrl: "https://res.cloudinary.com/demo/image/upload/v1/legal/sample.pdf", // Mock URL
+                fileUrl: "https://res.cloudinary.com/demo/image/upload/v1/legal/sample.pdf",
                 Status: uploadStatus
             }).unwrap();
 
             setIsUploadModalOpen(false);
             setUploadName('');
             setSelectedFile(null);
+            alert("Document uploaded successfully");
         } catch (error) {
             console.error("Failed to upload document:", error);
-            alert("Failed to upload document");
+            alert("Failed to upload document. Please check the console for details.");
         }
     };
 
@@ -95,14 +127,22 @@ export function LegalDocuments() {
     };
 
     const handleDownload = (url: string, name: string) => {
-        if (!url) return;
-        const link = document.createElement('a');
-        link.href = url;
-        link.setAttribute('download', name);
-        link.setAttribute('target', '_blank');
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        if (!url) {
+            alert("Download link is not available");
+            return;
+        }
+        try {
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', name);
+            link.setAttribute('target', '_blank');
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        } catch (e) {
+            console.error("Download failed:", e);
+            window.open(url, '_blank');
+        }
     };
 
     if (isLoading) {
@@ -117,7 +157,7 @@ export function LegalDocuments() {
 
     return (
         <AdminLayout>
-            <div className="space-y-6">
+            <div className="space-y-6 animate-in fade-in duration-500">
                 <div className="flex justify-between items-center">
                     <div>
                         <h1 className="text-2xl font-bold text-gray-900">Legal Documents</h1>
@@ -128,7 +168,13 @@ export function LegalDocuments() {
                     </Button>
                 </div>
 
-                {/* Upload Modal */}
+                {fetchError && (
+                    <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl flex items-center gap-3">
+                        <AlertCircle className="h-5 w-5" />
+                        <p>Error loading documents: {(fetchError as any).data?.message || 'Unauthorized or server error'}</p>
+                    </div>
+                )}
+
                 <Modal
                     isOpen={isUploadModalOpen}
                     onClose={() => !isCreating && setIsUploadModalOpen(false)}
@@ -188,28 +234,16 @@ export function LegalDocuments() {
                         </div>
 
                         <div className="flex gap-3 pt-4 border-t">
-                            <Button
-                                variant="outline"
-                                className="flex-1"
-                                type="button"
-                                onClick={() => setIsUploadModalOpen(false)}
-                                disabled={isCreating}
-                            >
+                            <Button variant="outline" className="flex-1" type="button" onClick={() => setIsUploadModalOpen(false)} disabled={isCreating}>
                                 Cancel
                             </Button>
-                            <Button
-                                className="flex-1"
-                                type="submit"
-                                disabled={isCreating || !selectedFile}
-                                leftIcon={isCreating ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-                            >
+                            <Button className="flex-1" type="submit" disabled={isCreating || !selectedFile} leftIcon={isCreating ? <Loader2 className="h-4 w-4 animate-spin" /> : null}>
                                 {isCreating ? 'Uploading...' : 'Upload Document'}
                             </Button>
                         </div>
                     </form>
                 </Modal>
 
-                {/* Delete Confirmation Modal */}
                 <Modal
                     isOpen={isDeleteModalOpen}
                     onClose={() => !isDeleting && setIsDeleteModalOpen(false)}
@@ -230,20 +264,10 @@ export function LegalDocuments() {
                         </div>
 
                         <div className="flex gap-3 pt-2">
-                            <Button
-                                variant="outline"
-                                className="flex-1 rounded-xl"
-                                onClick={() => setIsDeleteModalOpen(false)}
-                                disabled={isDeleting}
-                            >
+                            <Button variant="outline" className="flex-1 rounded-xl" onClick={() => setIsDeleteModalOpen(false)} disabled={isDeleting}>
                                 Cancel
                             </Button>
-                            <Button
-                                className="flex-1 bg-red-600 hover:bg-red-700 text-white rounded-xl"
-                                onClick={handleConfirmDelete}
-                                leftIcon={isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
-                                disabled={isDeleting}
-                            >
+                            <Button className="flex-1 bg-red-600 hover:bg-red-700 text-white rounded-xl" onClick={handleConfirmDelete} leftIcon={isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />} disabled={isDeleting}>
                                 {isDeleting ? 'Removing...' : 'Remove'}
                             </Button>
                         </div>
@@ -265,18 +289,9 @@ export function LegalDocuments() {
                                     </div>
                                 )
                             },
-                            {
-                                header: 'Type',
-                                accessorKey: 'type'
-                            },
-                            {
-                                header: 'Size',
-                                accessorKey: 'size'
-                            },
-                            {
-                                header: 'Last Updated',
-                                accessorKey: 'uploadedDate'
-                            },
+                            { header: 'Type', accessorKey: 'type' },
+                            { header: 'Size', accessorKey: 'size' },
+                            { header: 'Last Updated', accessorKey: 'uploadedDate' },
                             {
                                 header: 'Status',
                                 cell: (item: any) => (
@@ -289,20 +304,10 @@ export function LegalDocuments() {
                                 header: 'Actions',
                                 cell: (item: any) => (
                                     <div className="flex gap-2">
-                                        <Button
-                                            size="sm"
-                                            variant="ghost"
-                                            className="text-gray-500 hover:text-blue-600"
-                                            onClick={() => handleDownload(item.url, item.name)}
-                                        >
+                                        <Button size="sm" variant="ghost" className="text-gray-500 hover:text-blue-600" onClick={() => handleDownload(item.url, item.name)}>
                                             <Download className="h-4 w-4" />
                                         </Button>
-                                        <Button
-                                            size="sm"
-                                            variant="ghost"
-                                            className="text-gray-500 hover:text-red-600"
-                                            onClick={() => openDeleteModal(item)}
-                                        >
+                                        <Button size="sm" variant="ghost" className="text-gray-500 hover:text-red-600" onClick={() => openDeleteModal(item)}>
                                             <Trash2 className="h-4 w-4" />
                                         </Button>
                                     </div>

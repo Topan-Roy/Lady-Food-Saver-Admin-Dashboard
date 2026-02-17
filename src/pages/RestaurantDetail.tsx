@@ -30,6 +30,11 @@ import {
   ExternalLink,
   AlertTriangle,
   LayoutGrid,
+  FileText,
+  Printer,
+  Download,
+  Calendar,
+  Trash2,
 } from "lucide-react";
 
 import {
@@ -43,6 +48,7 @@ import {
   useUnblockRestaurantMutation,
   useGetRestaurantOrdersQuery,
 } from "../redux/features/dashboardApi";
+import { useGetLegalDocumentsQuery, useDeleteLegalDocumentMutation } from "../redux/features/legal";
 import { format } from "date-fns";
 
 export function RestaurantDetail() {
@@ -50,11 +56,13 @@ export function RestaurantDetail() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState<
-    "details" | "items" | "orders" | "reviews"
+    "details" | "items" | "orders" | "reviews" | "documents"
   >((searchParams.get("tab") as any) || "details");
   const [itemsViewMode, setItemsViewMode] = useState<"grid" | "list">("grid");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [localStatus, setLocalStatus] = useState<string | null>(null);
+  const [isDocumentModalOpen, setIsDocumentModalOpen] = useState(false);
+  const [selectedDocument, setSelectedDocument] = useState<any>(null);
 
   const { data: statsData } = useGetRestaurantStatsQuery(id);
   const { data: profileDataResponse } = useGetRestaurantProfileQuery(id);
@@ -74,6 +82,13 @@ export function RestaurantDetail() {
     useBlockRestaurantMutation();
   const [unblockRestaurant, { isLoading: isUnblocking }] =
     useUnblockRestaurantMutation();
+  const [deleteLegalDoc] = useDeleteLegalDocumentMutation();
+
+  const { data: legalDocsResponse, isLoading: isLegalLoading } = useGetLegalDocumentsQuery({
+    page: 1,
+    limit: 10,
+    status: 'Active'
+  });
 
   const profile = profileDataResponse?.data || profileDataResponse || {};
   const stats = statsData?.data || {
@@ -150,33 +165,30 @@ export function RestaurantDetail() {
 
   const handleBlockToggle = async () => {
     const currentStatus = String(restaurant.status || "").toLowerCase();
-    console.log("Toggling Block Status. Current Input State:", currentStatus);
-
     try {
       if (currentStatus === "blocked") {
-        console.log("Attempting to UNBLOCK restaurant:", id);
-        const result = await unblockRestaurant(id).unwrap();
-        console.log("Unblock Result:", result);
+        await unblockRestaurant(id).unwrap();
         setLocalStatus("Approved");
       } else {
-        console.log("Attempting to BLOCK restaurant:", id);
-        const result = await blockRestaurant(id).unwrap();
-        console.log("Block Result:", result);
+        await blockRestaurant(id).unwrap();
         setLocalStatus("Blocked");
       }
     } catch (error: any) {
       console.error("BLOCK/UNBLOCK OPERATION FAILED:", error);
-      // Log the specific details if available
-      if (error?.data) console.error("Error Data:", error.data);
-      if (error?.status) console.error("Error Status:", error.status);
     }
   };
 
-  // ... (rest of the component)
-  // Inside JSX:
-  // Use `compliance.alcoholNotice.enabled` to conditionally render the "Beer & Wine Notice" section if needed, or just display dynamic data.
-  // For now, I will keep the structure similar but use the fetched taxRule.
-
+  const handleDocDelete = async (id: string) => {
+    if (window.confirm("Are you sure you want to delete this document?")) {
+      try {
+        await deleteLegalDoc(id).unwrap();
+        alert("Document deleted successfully");
+      } catch (error) {
+        console.error("Delete Error:", error);
+        alert("Failed to delete document");
+      }
+    }
+  };
   const [listings, setListings] = useState([
     {
       id: 1,
@@ -346,6 +358,13 @@ export function RestaurantDetail() {
           >
             <MessageCircle className="h-4 w-4" />
             Reviews
+          </button>
+          <button
+            onClick={() => setActiveTab("documents")}
+            className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 whitespace-nowrap ${activeTab === "documents" ? "bg-white text-[#FF6B35] shadow-lg shadow-gray-200" : "text-gray-500 hover:text-gray-700"}`}
+          >
+            <FileText className="h-4 w-4" />
+            Documents
           </button>
         </div>
 
@@ -950,121 +969,265 @@ export function RestaurantDetail() {
               <CustomerReviews restaurantId={id} />
             </div>
           )}
-        </div>
 
-        {/* Edit Modal */}
-        <Modal
-          isOpen={isEditModalOpen}
-          onClose={() => setIsEditModalOpen(false)}
-          title="Quick Item Edit"
-        >
-          <div className="space-y-6">
-            <div className="flex justify-center -mt-2">
-              <div className="relative w-40 h-40 rounded-[32px] overflow-hidden border-4 border-gray-50 shadow-2xl group">
-                <img
-                  src={selectedItem?.image}
-                  alt=""
-                  className="w-full h-full object-cover transition-transform group-hover:scale-105"
-                />
-                <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button className="text-white text-[10px] font-black uppercase tracking-widest px-4 py-2 bg-white/20 backdrop-blur-xl rounded-full border border-white/30">
-                    Replace Hero Image
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <Input
-                label="Item Name"
-                value={selectedItem?.title || ""}
-                onChange={(e) =>
-                  setSelectedItem({ ...selectedItem, title: e.target.value })
-                }
-                className="rounded-2xl border-gray-100 font-bold"
-              />
-
-              <div>
-                <label className="block text-sm font-bold text-gray-700 mb-1.5">
-                  Description
-                </label>
-                <textarea
-                  value={selectedItem?.description || ""}
-                  onChange={(e) =>
-                    setSelectedItem({
-                      ...selectedItem,
-                      description: e.target.value,
-                    })
-                  }
-                  className="w-full min-h-[100px] border-2 border-gray-100 rounded-2xl px-4 py-3 focus:ring-2 focus:ring-[#FF6B35]/20 focus:border-[#FF6B35] outline-none transition-all resize-y text-gray-700 font-medium"
-                  placeholder="Describe your item..."
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-1.5">
-                    Platform Standard Price
-                  </label>
-                  <div className="flex items-center gap-2 bg-gray-50 border border-gray-100 rounded-2xl px-4 py-3 text-gray-400 font-black">
-                    <DollarSign className="h-4 w-4" />
-                    {selectedItem?.price || "$5.99"}
+          {activeTab === "documents" && (
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-6">
+              <Card noPadding className="overflow-hidden border-none shadow-xl shadow-gray-100/50">
+                <div className="p-6 border-b border-gray-50 flex items-center gap-3">
+                  <div className="p-2 bg-orange-50 text-[#FF6B35] rounded-lg">
+                    <FileText className="h-5 w-5" />
                   </div>
+                  <h3 className="font-black text-gray-900">Compliance Documents</h3>
                 </div>
-                <Input
-                  label="Stock Level"
-                  type="number"
-                  value={selectedItem?.stock || 0}
-                  onChange={(e) =>
-                    setSelectedItem({
-                      ...selectedItem,
-                      stock: parseInt(e.target.value) || 0,
-                    })
-                  }
-                  className="rounded-2xl border-gray-100 font-bold"
-                />
-              </div>
+                <div className="overflow-x-auto">
+                  <Table
+                    isLoading={isLegalLoading}
+                    data={(legalDocsResponse?.data?.documents || []).map((doc: any) => ({
+                      id: doc.id,
+                      name: doc.DocumentName,
+                      status: doc.Status === 'Active' ? 'Verified' : 'Pending Review',
+                      updated: doc.LastUpdated ? format(new Date(doc.LastUpdated), 'yyyy-MM-dd') : 'N/A',
+                      fileUrl: doc.fileUrl,
+                      type: doc.Type,
+                      size: doc.Size
+                    }))}
+                    columns={[
+                      {
+                        header: "Document Name",
+                        accessorKey: "name",
+                        className: "font-semibold text-gray-700 py-6",
+                      },
+                      {
+                        header: "Status",
+                        cell: (item: any) => (
+                          <Badge
+                            variant={item.status === "Verified" ? "success" : "warning"}
+                            className={item.status === "Verified" ? "bg-emerald-50 text-emerald-600 border-emerald-100" : "bg-amber-50 text-amber-600 border-amber-100"}
+                          >
+                            {item.status}
+                          </Badge>
+                        ),
+                      },
+                      {
+                        header: "Last Updated",
+                        accessorKey: "updated",
+                        className: "text-gray-500",
+                      },
+                      {
+                        header: "Action",
+                        cell: (item: any) => (
+                          <div className="flex items-center gap-4">
+                            <button
+                              onClick={() => {
+                                setSelectedDocument(item);
+                                setIsDocumentModalOpen(true);
+                              }}
+                              className="text-sm font-bold text-gray-400 hover:text-[#FF6B35] transition-colors"
+                            >
+                              View
+                            </button>
+                            <button
+                              onClick={() => handleDocDelete(item.id)}
+                              className="p-2 text-gray-400 hover:text-red-500 transition-colors"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </div>
+                        ),
+                      },
+                    ]}
+                  />
+                </div>
+              </Card>
             </div>
+          )}
+        </div>
+      </div>
 
-            <div className="pt-6 flex items-center justify-between gap-4 border-t border-gray-100 mt-6">
-              <button
-                onClick={() => setIsEditModalOpen(false)}
-                className="text-gray-400 font-bold hover:text-gray-600 transition-colors text-sm"
-              >
-                Discard
-              </button>
-              <div className="flex gap-3">
-                <Button
-                  variant="outline"
-                  onClick={() => setIsEditModalOpen(false)}
-                  className="px-6 border-gray-200"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  variant="primary"
-                  onClick={handleSaveEdit}
-                  className="px-6 shadow-xl shadow-orange-500/20"
-                >
-                  Update Item
-                </Button>
+      {/* Edit Modal */}
+      <Modal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        title="Quick Item Edit"
+      >
+        <div className="space-y-6">
+          <div className="flex justify-center -mt-2">
+            <div className="relative w-40 h-40 rounded-[32px] overflow-hidden border-4 border-gray-50 shadow-2xl group">
+              <img
+                src={selectedItem?.image}
+                alt=""
+                className="w-full h-full object-cover transition-transform group-hover:scale-105"
+              />
+              <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                <button className="text-white text-[10px] font-black uppercase tracking-widest px-4 py-2 bg-white/20 backdrop-blur-xl rounded-full border border-white/30">
+                  Replace Hero Image
+                </button>
               </div>
             </div>
           </div>
-        </Modal>
 
-        <SupportChatModal
-          isOpen={isChatModalOpen}
-          onClose={() => setIsChatModalOpen(false)}
-          ticket={{
-            id: "MSG-" + (restaurant.id || "001"),
-            subject: "Direct Message",
-            user: restaurant.name,
-            type: "Restaurant Partner",
-            status: "Active",
-          }}
-        />
-      </div>
+          <div className="space-y-4">
+            <Input
+              label="Item Name"
+              value={selectedItem?.title || ""}
+              onChange={(e) =>
+                setSelectedItem({ ...selectedItem, title: e.target.value })
+              }
+              className="rounded-2xl border-gray-100 font-bold"
+            />
+
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-1.5">
+                Description
+              </label>
+              <textarea
+                value={selectedItem?.description || ""}
+                onChange={(e) =>
+                  setSelectedItem({
+                    ...selectedItem,
+                    description: e.target.value,
+                  })
+                }
+                className="w-full min-h-[100px] border-2 border-gray-100 rounded-2xl px-4 py-3 focus:ring-2 focus:ring-[#FF6B35]/20 focus:border-[#FF6B35] outline-none transition-all resize-y text-gray-700 font-medium"
+                placeholder="Describe your item..."
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-1.5">
+                  Platform Standard Price
+                </label>
+                <div className="flex items-center gap-2 bg-gray-50 border border-gray-100 rounded-2xl px-4 py-3 text-gray-400 font-black">
+                  <DollarSign className="h-4 w-4" />
+                  {selectedItem?.price || "$5.99"}
+                </div>
+              </div>
+              <Input
+                label="Stock Level"
+                type="number"
+                value={selectedItem?.stock || 0}
+                onChange={(e) =>
+                  setSelectedItem({
+                    ...selectedItem,
+                    stock: parseInt(e.target.value) || 0,
+                  })
+                }
+                className="rounded-2xl border-gray-100 font-bold"
+              />
+            </div>
+          </div>
+
+          <div className="pt-6 flex items-center justify-between gap-4 border-t border-gray-100 mt-6">
+            <button
+              onClick={() => setIsEditModalOpen(false)}
+              className="text-gray-400 font-bold hover:text-gray-600 transition-colors text-sm"
+            >
+              Discard
+            </button>
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                onClick={() => setIsEditModalOpen(false)}
+                className="px-6 border-gray-200"
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="primary"
+                onClick={handleSaveEdit}
+                className="px-6 shadow-xl shadow-orange-500/20"
+              >
+                Update Item
+              </Button>
+            </div>
+          </div>
+        </div>
+      </Modal>
+
+      <SupportChatModal
+        isOpen={isChatModalOpen}
+        onClose={() => setIsChatModalOpen(false)}
+        ticket={{
+          id: "MSG-" + (id || "001"),
+          subject: "Direct Message",
+          user: restaurant.name,
+          type: "Restaurant Partner",
+          status: "Active",
+        }}
+      />
+
+      <Modal
+        isOpen={isDocumentModalOpen}
+        onClose={() => setIsDocumentModalOpen(false)}
+        title="Document Details"
+        size="lg"
+      >
+        <div className="animate-in fade-in duration-300">
+          <div className="flex items-start justify-between mb-6">
+            <div className="space-y-4">
+              <h2 className="text-2xl font-bold text-gray-900 leading-tight">
+                {selectedDocument?.name}
+              </h2>
+              <div className="flex items-center gap-4">
+                <span className="px-3 py-1 bg-emerald-50 text-emerald-600 text-xs font-bold rounded-full border border-emerald-100">
+                  {selectedDocument?.status}
+                </span>
+                <div className="flex items-center gap-2 text-gray-400 font-bold text-sm">
+                  <Calendar className="h-4 w-4" />
+                  <span>Uploaded on {selectedDocument?.updated}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 shrink-0">
+              <button className="flex items-center gap-2 px-6 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-bold text-gray-600 hover:bg-gray-50 transition-all shadow-sm">
+                <Printer className="h-4 w-4" />
+                Print
+              </button>
+              <button
+                onClick={() => selectedDocument?.fileUrl && window.open(selectedDocument.fileUrl)}
+                className="flex items-center gap-2 px-6 py-2.5 bg-[#FF6B35] text-white rounded-xl text-sm font-bold shadow-lg shadow-orange-100 hover:bg-[#E85A2D] transition-all"
+              >
+                <Download className="h-4 w-4" />
+                Download
+              </button>
+            </div>
+          </div>
+
+          <div className="h-px bg-gray-100 w-full mb-8" />
+
+          <div className="bg-white rounded-[2rem] border border-gray-100 p-2 shadow-inner mb-8">
+            <div className="w-full aspect-[21/9] bg-gray-50/50 rounded-[1.8rem] flex flex-col items-center justify-center border border-gray-50 relative overflow-hidden group">
+              <div className="flex items-center gap-3 px-6 py-3 bg-white rounded-2xl shadow-sm border border-gray-100 relative z-10">
+                <div className="p-2 bg-orange-50 text-[#FF6B35] rounded-lg">
+                  <FileText className="h-5 w-5" />
+                </div>
+                <span className="text-sm font-bold text-gray-700">
+                  {selectedDocument?.name}
+                </span>
+              </div>
+
+              <div className="absolute inset-0 opacity-10 flex items-center justify-center select-none pointer-events-none">
+                <img
+                  src={selectedDocument?.fileUrl || "https://images.unsplash.com/photo-1621243804936-775306a8f2e3?w=800"}
+                  alt=""
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="flex justify-end">
+            <button
+              onClick={() => setIsDocumentModalOpen(false)}
+              className="text-sm font-bold text-gray-600 hover:text-gray-900 transition-colors p-2"
+            >
+              Close Viewer
+            </button>
+          </div>
+        </div>
+      </Modal>
     </AdminLayout>
   );
 }

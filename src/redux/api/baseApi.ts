@@ -40,7 +40,7 @@ const baseQueryWithReauth = async (args: any, api: any, extraOptions: any) => {
                 // Try to get a new token
                 const refreshResult: any = await baseQuery(
                     {
-                        url: "/auth/refresh-auth",
+                        url: "/api/v1/auth/refresh-auth",
                         method: "POST",
                         body: { refreshToken },
                     },
@@ -113,7 +113,7 @@ export const baseApi = createApi({
     tagTypes: ["auth", "dashboardStats", "admin-users", "earnings-overview", "Faqs", "payments", "RestaurantProfile", "Banners", "LegalDocuments"],
     endpoints: () => ({}),
     // Global configuration for refetch behavior
-    keepUnusedDataFor: 0, // Don't keep unused data in cache
+    keepUnusedDataFor: 60, // Keep data for 60 seconds
 });
 
 export default baseApi;

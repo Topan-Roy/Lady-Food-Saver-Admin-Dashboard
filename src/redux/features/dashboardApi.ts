@@ -23,7 +23,7 @@ export const dashboardApi = baseApi.injectEndpoints({
             providesTags: ["dashboardStats"],
         }),
         getTopRestaurants: builder.query({
-            query: (filter) => `/api/v1admin/dashboard/top-restaurants?filter=${filter || 'month'}`,
+            query: (filter) => `/api/v1/admin/dashboard/top-restaurants?filter=${filter || 'month'}`,
             providesTags: ["dashboardStats"],
         }),
         getTrendingMenus: builder.query({
