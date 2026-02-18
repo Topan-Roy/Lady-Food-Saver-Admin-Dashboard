@@ -5,7 +5,7 @@ export const chatApi = baseApi.injectEndpoints({
     endpoints: (builder) => ({
         getOrCreateConversation: builder.mutation({
             query: (data) => ({
-                url: "/api/chat/conversations",
+                url: "/api/v1/chat/conversations",
                 method: "POST",
                 body: data,
             }),
@@ -13,16 +13,36 @@ export const chatApi = baseApi.injectEndpoints({
         }),
         getMessages: builder.query({
             query: ({ conversationId, page = 1, limit = 20 }) =>
-                `/api/chat/conversations/${conversationId}/messages?page=${page}&limit=${limit}`,
+                `/api/v1/chat/conversations/${conversationId}/messages?page=${page}&limit=${limit}`,
             providesTags: ["RestaurantProfile"],
         }),
         sendMessage: builder.mutation({
             query: (data) => ({
-                url: "/api/chat/message/customer-to-admin",
+                url: "/api/v1/chat/message/customer-to-admin",
                 method: "POST",
                 body: data,
             }),
             invalidatesTags: ["RestaurantProfile"],
+        }),
+        adminSendMessage: builder.mutation({
+            query: (data) => ({
+                url: "/api/v1/chat/message/customer-to-admin",
+                method: "POST",
+                body: data,
+            }),
+            invalidatesTags: ["RestaurantProfile"],
+        }),
+        adminToProvider: builder.mutation({
+            query: (data) => ({
+                url: "/api/v1/chat/message/customer-to-admin",
+                method: "POST",
+                body: data,
+            }),
+            invalidatesTags: ["RestaurantProfile"],
+        }),
+        getSupportTickets: builder.query({
+            query: () => "/api/v1/support/my-tickets",
+            providesTags: ["RestaurantProfile"],
         }),
     }),
 });
@@ -30,5 +50,8 @@ export const chatApi = baseApi.injectEndpoints({
 export const {
     useGetOrCreateConversationMutation,
     useGetMessagesQuery,
-    useSendMessageMutation
+    useSendMessageMutation,
+    useAdminSendMessageMutation,
+    useAdminToProviderMutation,
+    useGetSupportTicketsQuery
 } = chatApi;

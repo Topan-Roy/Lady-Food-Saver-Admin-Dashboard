@@ -47,9 +47,9 @@ export function Login() {
 
       const user = responseData.user || responseData.data?.user;
 
-      if (accessToken) {
+      if (accessToken && user?.role === 'ADMIN') {
         dispatch(setLogin({
-          user: user || { email },
+          user: user,
           token: accessToken,
           refreshToken
         }));
@@ -61,6 +61,9 @@ export function Login() {
         }
 
         navigate('/');
+      } else if (accessToken && user?.role !== 'ADMIN') {
+        setErrorMsg("Access Denied: Only administrators can access this dashboard.");
+        dispatch(logout()); // Clean up any partial state
       } else {
         console.error("Login successful but no token found in session object:", result);
         setErrorMsg("Login failed: Invalid server response structure.");

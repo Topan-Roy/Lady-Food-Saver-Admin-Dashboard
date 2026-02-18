@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../redux/store';
 import { Modal } from '../ui/Modal';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
@@ -6,8 +8,9 @@ import { Send, User, CheckCircle, Loader2 } from 'lucide-react';
 import {
   useGetOrCreateConversationMutation,
   useGetMessagesQuery,
-  useSendMessageMutation
-} from '@/redux/features/chat.ts';
+  useAdminSendMessageMutation,
+  useAdminToProviderMutation
+} from '../../redux/features/chat';
 
 interface SupportChatModalProps {
   isOpen: boolean;
@@ -26,8 +29,12 @@ export function SupportChatModal({
   const [conversationId, setConversationId] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  const { user: currentUser } = useSelector((state: RootState) => state.auth);
   const [getOrCreateConversation, { isLoading: isCreatingChat }] = useGetOrCreateConversationMutation();
-  const [sendMessage, { isLoading: isSending }] = useSendMessageMutation();
+  const [adminSendMessage, { isLoading: isSendingCustomer }] = useAdminSendMessageMutation();
+  const [adminToProvider, { isLoading: isSendingProvider }] = useAdminToProviderMutation();
+
+  const isSending = isSendingCustomer || isSendingProvider;
 
   const {
     data: messagesData,
@@ -42,14 +49,11 @@ export function SupportChatModal({
     if (isOpen && ticket) {
       const handleInitChat = async () => {
         try {
-          // Use providerId for restaurants and customerId for customers
-          // Fallback to ticket.id if not present
-          const targetId = ticket.providerId || ticket.customerId || ticket.userId || ticket.id;
-          const payload = ticket.type?.toLowerCase() === 'restaurant'
-            ? { providerId: targetId }
-            : { providerId: targetId }; // Based on user example, even for customer they might use providerId in the body for the query part? 
-          // Wait, the user prompt said "akane je customer ar kate message korbe tar id" but the key was providerId.
-          // I'll stick to providerId as per user's post body example.
+          // prioritized user id from the mapped support ticket
+          const targetId = ticket.userId || ticket.user || ticket.providerId || ticket.customerId || ticket.id;
+
+          // As per user's example, both customer and provider use providerId key for initialization
+          const payload = { providerId: targetId };
 
           const result = await getOrCreateConversation(payload).unwrap();
           if (result.data?.id) {
@@ -73,11 +77,19 @@ export function SupportChatModal({
     if (!message.trim() || !conversationId) return;
 
     try {
-      const targetId = ticket.providerId || ticket.customerId || ticket.userId || ticket.id;
-      await sendMessage({
+      const targetId = ticket.userId || ticket.user || ticket.providerId || ticket.customerId || ticket.id;
+      const isRestaurant = ticket.userType?.toLowerCase() === 'restaurant' || ticket.type?.toLowerCase() === 'restaurant';
+
+      const payload = {
         receiverId: targetId,
         text: message
-      }).unwrap();
+      };
+
+      if (isRestaurant) {
+        await adminToProvider(payload).unwrap();
+      } else {
+        await adminSendMessage(payload).unwrap();
+      }
 
       setMessage('');
       refetchMessages();
@@ -85,6 +97,7 @@ export function SupportChatModal({
       console.error("Failed to send message:", error);
     }
   };
+
 
   if (!ticket) return null;
 
@@ -98,10 +111,13 @@ export function SupportChatModal({
             <User className="h-6 w-6 text-[#FF6B35]" />
           </div>
           <div>
-            <p className="font-bold text-gray-900">{ticket.user}</p>
+            <p className="font-bold text-gray-900 group">
+              {ticket.userName || ticket.user || ticket.userId || "Unknown User"}
+              <span className="ml-2 text-[10px] text-gray-400 font-normal">({ticket.userId || ticket.id})</span>
+            </p>
             <p className="text-xs font-medium text-gray-500 flex items-center gap-2">
               <span className={`h-2 w-2 rounded-full ${ticket.status === 'Open' ? 'bg-red-500' : 'bg-green-500'}`} />
-              {ticket.type} • {ticket.status}
+              {ticket.userType || ticket.type} • {ticket.status}
             </p>
           </div>
         </div>
@@ -128,13 +144,21 @@ export function SupportChatModal({
           </div>
         ) : (
           chatMessages.map((msg: any) => {
-            const isMe = msg.sender?.role === 'ADMIN' || msg.senderId === 'ADMIN'; // Adjust based on actual payload
+            const targetId = ticket.userId || ticket.user || ticket.providerId || ticket.customerId || ticket.id;
+
+            // If sender is NOT the customer/provider we are chatting with, it must be an ADMIN
+            const isTarget = msg.senderId === targetId || msg.sender?.id === targetId;
+            const isMe = !isTarget ||
+              msg.sender?.role === 'ADMIN' ||
+              msg.senderId === currentUser?.id ||
+              msg.sender?.id === currentUser?.id;
+
             return (
               <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2 duration-300`}>
                 <div className={`max-w-[75%] space-y-1`}>
                   <div className={`p-4 rounded-2xl shadow-sm ${isMe
-                      ? 'bg-[#FF6B35] text-white rounded-tr-none'
-                      : 'bg-white text-gray-800 rounded-tl-none border border-gray-100'
+                    ? 'bg-[#FF6B35] text-white rounded-tr-none'
+                    : 'bg-white text-gray-800 rounded-tl-none border border-gray-100'
                     }`}>
                     {msg.attachmentUrl && (
                       <img src={msg.attachmentUrl} alt="attachment" className="rounded-lg mb-2 max-h-48 w-full object-cover" />

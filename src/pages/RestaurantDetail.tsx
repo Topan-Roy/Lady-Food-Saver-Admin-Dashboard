@@ -1151,8 +1151,9 @@ export function RestaurantDetail() {
         ticket={{
           id: "MSG-" + (id || "001"),
           subject: "Direct Message",
-          user: restaurant.name,
-          type: "Restaurant Partner",
+          userName: restaurant.name,
+          userId: id,
+          userType: "Restaurant",
           status: "Active",
         }}
       />
