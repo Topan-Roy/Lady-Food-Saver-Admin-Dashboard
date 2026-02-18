@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { AdminLayout } from '../components/layout/AdminLayout';
 import { Card } from '../components/ui/Card';
 import { Bell, CheckCircle, AlertCircle, Info, Clock, ArrowRight } from 'lucide-react';
@@ -52,7 +52,7 @@ export function Notifications() {
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
                         <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
-                            <Bell className="h-8 w-8 text-[#FF6B35]" />
+                            <Bell className="h-8 w-8 text-[#E4983A]" />
                             Notifications
                         </h1>
                         <p className="text-gray-500">Stay updated with platform activities and alerts</p>
@@ -60,20 +60,20 @@ export function Notifications() {
                     <div className="flex items-center gap-4">
                         <button
                             onClick={markAllAsRead}
-                            className="text-sm font-bold text-[#FF6B35] hover:text-[#E85A2D] transition-colors bg-orange-50 px-4 py-2 rounded-xl"
+                            className="text-sm font-bold text-[#E4983A] hover:text-[#E85A2D] transition-colors bg-orange-50 px-4 py-2 rounded-xl"
                         >
                             Mark all as read
                         </button>
                         <div className="flex bg-gray-100 p-1 rounded-xl w-fit">
                             <button
                                 onClick={() => setFilter('all')}
-                                className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${filter === 'all' ? 'bg-white text-[#FF6B35] shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                                className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${filter === 'all' ? 'bg-white text-[#E4983A] shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
                             >
                                 All
                             </button>
                             <button
                                 onClick={() => setFilter('unread')}
-                                className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${filter === 'unread' ? 'bg-white text-[#FF6B35] shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                                className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${filter === 'unread' ? 'bg-white text-[#E4983A] shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
                             >
                                 Unread
                             </button>
@@ -86,7 +86,7 @@ export function Notifications() {
                         <Card
                             key={notif.id}
                             noPadding
-                            className={`group transition-all duration-300 hover:shadow-lg border-l-4 cursor-pointer ${notif.read ? 'border-gray-200 opacity-75 hover:opacity-100' : 'border-[#FF6B35] bg-white'}`}
+                            className={`group transition-all duration-300 hover:shadow-lg border-l-4 cursor-pointer ${notif.read ? 'border-gray-200 opacity-75 hover:opacity-100' : 'border-[#E4983A] bg-white'}`}
                             onClick={() => markAsRead(notif.id)}
                         >
                             <div className="p-6 flex items-start gap-5">
@@ -110,14 +110,14 @@ export function Notifications() {
                                     {notif.type === 'success' && notif.title.includes('Order') && (
                                         <button
                                             onClick={() => navigate('/orders')}
-                                            className="mt-3 text-sm font-bold text-[#FF6B35] flex items-center gap-1 hover:gap-2 transition-all group-hover/btn"
+                                            className="mt-3 text-sm font-bold text-[#E4983A] flex items-center gap-1 hover:gap-2 transition-all group-hover/btn"
                                         >
                                             View Order Details <ArrowRight className="h-4 w-4" />
                                         </button>
                                     )}
                                 </div>
                                 {!notif.read && (
-                                    <div className="w-3 h-3 rounded-full bg-[#FF6B35] mt-2 ring-4 ring-orange-50" title="Unread"></div>
+                                    <div className="w-3 h-3 rounded-full bg-[#E4983A] mt-2 ring-4 ring-orange-50" title="Unread"></div>
                                 )}
                             </div>
                         </Card>

@@ -1,8 +1,8 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LogIn, Mail, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react';
 import { useDispatch } from 'react-redux';
-
+import { getAppLogo } from '../utils/logo';
 
 import { setLogin, logout } from '@/redux/slices/authSlice';
 import { useLoginMutation, useForgotPasswordMutation, useVerifyForgotOtpMutation, useResetPasswordMutation } from '@/redux/api/authApi';
@@ -145,7 +145,13 @@ export function Login() {
         <div className="bg-white rounded-3xl shadow-[0_20px_50px_rgba(255,107,53,0.1)] border border-white p-8 md:p-10 backdrop-blur-sm">
           {/* Logo/Brand */}
           <div className="flex flex-col items-center mb-10">
-            {/* ... */}
+            <div className="w-24 h-24 mb-4 transform transition-transform hover:scale-110 duration-300">
+              <img src={getAppLogo()} alt="DineFive Logo" className="w-full h-full object-contain" />
+            </div>
+            <h1 className="text-3xl font-bold text-gray-900 tracking-tight">DineFive</h1>
+            <p className="text-gray-500 mt-2 font-medium">
+              {step === 'login' ? 'Admin Control Center' : 'Recover your account'}
+            </p>
           </div>
 
           {step === 'login' && (
@@ -153,14 +159,14 @@ export function Login() {
               {/* Error Message Display */}
               {errorMsg && (
                 <div className="bg-red-50 text-red-500 text-sm p-3 rounded-lg border border-red-100 flex items-center animate-in fade-in zoom-in-95 duration-200">
-                  <span className="mr-2">⚠️</span> {errorMsg}
+                  <span className="mr-2">âš ï¸</span> {errorMsg}
                 </div>
               )}
 
               <div className="space-y-2">
                 <label className="text-sm font-semibold text-gray-700 ml-1">Email Address</label>
                 <div className="relative group">
-                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-[#FF6B35] transition-colors" />
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-[#E4983A] transition-colors" />
                   <input
                     type="email"
                     required
@@ -170,7 +176,7 @@ export function Login() {
                       setErrorMsg("");
                     }}
                     placeholder="admin@foodsaver.com"
-                    className="w-full bg-gray-50 border border-gray-100 rounded-2xl py-4 pl-12 pr-4 outline-none focus:ring-2 focus:ring-[#FF6B35]/20 focus:border-[#FF6B35] transition-all bg-white"
+                    className="w-full bg-gray-50 border border-gray-100 rounded-2xl py-4 pl-12 pr-4 outline-none focus:ring-2 focus:ring-[#E4983A]/20 focus:border-[#E4983A] transition-all bg-white"
                   />
                 </div>
               </div>
@@ -178,30 +184,33 @@ export function Login() {
               <div className="space-y-2">
                 <div className="flex justify-between items-center ml-1">
                   <label className="text-sm font-semibold text-gray-700">Password</label>
-                  <button
-                    type="button"
-                    onClick={() => setStep('forgot-email')}
-                    className="text-xs font-bold text-[#FF6B35] hover:text-[#E85A2D] transition-colors"
-                  >
-                    Forgot Password?
-                  </button>
+
                 </div>
                 <div className="relative group">
-                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-[#FF6B35] transition-colors" />
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-[#E4983A] transition-colors" />
                   <input
                     type={showPassword ? 'text' : 'password'}
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="w-full bg-gray-50 border border-gray-100 rounded-2xl py-4 pl-12 pr-12 outline-none focus:ring-2 focus:ring-[#FF6B35]/20 focus:border-[#FF6B35] transition-all bg-white"
+                    className="w-full bg-gray-50 border border-gray-100 rounded-2xl py-4 pl-12 pr-12 outline-none focus:ring-2 focus:ring-[#E4983A]/20 focus:border-[#E4983A] transition-all bg-white"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#FF6B35]"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#E4983A]"
                   >
                     {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  </button>
+                </div>
+                <div className="flex justify-end">
+                  <button
+                    type="button"
+                    onClick={() => setStep('forgot-email')}
+                    className="text-xs font-bold text-[#E4983A] hover:text-[#e19231] transition-colors"
+                  >
+                    Forgot Password?
                   </button>
                 </div>
               </div>
@@ -209,7 +218,7 @@ export function Login() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full bg-[#FF6B35] text-white font-bold py-4 rounded-2xl shadow-lg shadow-[#FF6B35]/20 hover:bg-[#E85A2D] hover:-translate-y-0.5 active:translate-y-0 transition-all flex items-center justify-center gap-2 group"
+                className="w-full bg-[#E4983A] text-white font-bold py-4 rounded-2xl shadow-lg shadow-[#E4983A]/20 hover:bg-[#e0902e] hover:-translate-y-0.5 active:translate-y-0 transition-all flex items-center justify-center gap-2 group"
               >
                 {isLoading ? (
                   <div className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full animate-spin"></div>
@@ -228,14 +237,14 @@ export function Login() {
               <div className="space-y-2">
                 <label className="text-sm font-semibold text-gray-700 ml-1">Recovery Email</label>
                 <div className="relative group">
-                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-[#FF6B35] transition-colors" />
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-[#E4983A] transition-colors" />
                   <input
                     type="email"
                     required
                     placeholder="Enter your email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full bg-gray-50 border border-gray-100 rounded-2xl py-4 pl-12 pr-4 outline-none focus:ring-2 focus:ring-[#FF6B35]/20 focus:border-[#FF6B35] transition-all bg-white"
+                    className="w-full bg-gray-50 border border-gray-100 rounded-2xl py-4 pl-12 pr-4 outline-none focus:ring-2 focus:ring-[#E4983A]/20 focus:border-[#E4983A] transition-all bg-white"
                   />
                 </div>
                 <p className="text-xs text-gray-500 ml-1">
@@ -247,7 +256,7 @@ export function Login() {
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full bg-[#FF6B35] text-white font-bold py-4 rounded-2xl shadow-lg shadow-[#FF6B35]/20 hover:bg-[#E85A2D] transition-all flex items-center justify-center gap-2"
+                  className="w-full bg-[#E4983A] text-white font-bold py-4 rounded-2xl shadow-lg shadow-[#E4983A]/20 hover:bg-[#e4922d] transition-all flex items-center justify-center gap-2"
                 >
                   {isLoading ? (
                     <div className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full animate-spin"></div>
@@ -276,7 +285,7 @@ export function Login() {
                     value={code}
                     onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
                     placeholder="123456"
-                    className="w-40 text-center text-2xl tracking-[0.5em] font-black bg-gray-50 border border-gray-100 rounded-2xl py-4 outline-none focus:ring-2 focus:ring-[#FF6B35]/20 focus:border-[#FF6B35] transition-all bg-white"
+                    className="w-40 text-center text-2xl tracking-[0.5em] font-black bg-gray-50 border border-gray-100 rounded-2xl py-4 outline-none focus:ring-2 focus:ring-[#E4983A]/20 focus:border-[#E4983A] transition-all bg-white"
                   />
                 </div>
                 <p className="text-xs text-gray-500 mt-2">
@@ -288,7 +297,7 @@ export function Login() {
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full bg-[#FF6B35] text-white font-bold py-4 rounded-2xl shadow-lg shadow-[#FF6B35]/20 hover:bg-[#E85A2D] transition-all flex items-center justify-center gap-2"
+                  className="w-full bg-[#E4983A] text-white font-bold py-4 rounded-2xl shadow-lg shadow-[#E4983A]/20 hover:bg-[#e1902e] transition-all flex items-center justify-center gap-2"
                 >
                   {isLoading ? (
                     <div className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full animate-spin"></div>
@@ -311,28 +320,28 @@ export function Login() {
                 <div className="space-y-2">
                   <label className="text-sm font-semibold text-gray-700 ml-1">New Password</label>
                   <div className="relative group">
-                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-[#FF6B35] transition-colors" />
+                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-[#E4983A] transition-colors" />
                     <input
                       type="password"
                       required
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
                       placeholder="New password"
-                      className="w-full bg-gray-50 border border-gray-100 rounded-2xl py-4 pl-12 outline-none focus:ring-2 focus:ring-[#FF6B35]/20 focus:border-[#FF6B35] transition-all bg-white"
+                      className="w-full bg-gray-50 border border-gray-100 rounded-2xl py-4 pl-12 outline-none focus:ring-2 focus:ring-[#E4983A]/20 focus:border-[#E4983A] transition-all bg-white"
                     />
                   </div>
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-semibold text-gray-700 ml-1">Confirm Password</label>
                   <div className="relative group">
-                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-[#FF6B35] transition-colors" />
+                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-[#E4983A] transition-colors" />
                     <input
                       type="password"
                       required
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       placeholder="Confirm password"
-                      className="w-full bg-gray-50 border border-gray-100 rounded-2xl py-4 pl-12 outline-none focus:ring-2 focus:ring-[#FF6B35]/20 focus:border-[#FF6B35] transition-all bg-white"
+                      className="w-full bg-gray-50 border border-gray-100 rounded-2xl py-4 pl-12 outline-none focus:ring-2 focus:ring-[#E4983A]/20 focus:border-[#E4983A] transition-all bg-white"
                     />
                   </div>
                 </div>
@@ -341,7 +350,7 @@ export function Login() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full bg-[#FF6B35] text-white font-bold py-4 rounded-2xl shadow-lg shadow-[#FF6B35]/20 hover:bg-[#E85A2D] transition-all flex items-center justify-center gap-2"
+                className="w-full bg-[#E4983A] text-white font-bold py-4 rounded-2xl shadow-lg shadow-[#E4983A]/20 hover:bg-[#e18f2b] transition-all flex items-center justify-center gap-2"
               >
                 {isLoading ? (
                   <div className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full animate-spin"></div>
@@ -363,7 +372,7 @@ export function Login() {
               </div>
               <button
                 onClick={() => setStep('login')}
-                className="w-full bg-[#FF6B35] text-white font-bold py-4 rounded-2xl shadow-lg shadow-[#FF6B35]/20 hover:bg-[#E85A2D] transition-all"
+                className="w-full bg-[#E4983A] text-white font-bold py-4 rounded-2xl shadow-lg shadow-[#E4983A]/20 hover:bg-[#E85A2D] transition-all"
               >
                 Back to Login
               </button>

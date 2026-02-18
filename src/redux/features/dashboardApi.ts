@@ -130,8 +130,19 @@ export const dashboardApi = baseApi.injectEndpoints({
             providesTags: (_result, _error, id) => [{ type: "admin-users", id }],
         }),
         getTransactionOrders: builder.query({
-            query: ({ providerId, status = 'all_status', page = 1, limit = 20 }) =>
-                `/api/v1/admin/transactions-orders/${providerId}?page=${page}&limit=${limit}&status=${status}`,
+            query: ({ providerId, status = 'all_status', page = 1, limit = 20, timeFilter, startDate, endDate }) => {
+                let url = `/api/v1/admin/transactions-orders/${providerId}?page=${page}&limit=${limit}&status=${status}`;
+                if (timeFilter && timeFilter !== 'all_time' && timeFilter !== 'custom') {
+                    url += `&filter=${timeFilter}`;
+                }
+                if (startDate) {
+                    url += `&startDate=${startDate}`;
+                }
+                if (endDate) {
+                    url += `&endDate=${endDate}`;
+                }
+                return url;
+            },
             providesTags: ["dashboardStats"],
         }),
     }),

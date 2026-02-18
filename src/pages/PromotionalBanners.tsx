@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+﻿import { useState, useMemo } from 'react';
 import { AdminLayout } from '../components/layout/AdminLayout';
 import { Table } from '../components/ui/Table';
 import { Badge } from '../components/ui/Badge';
@@ -110,14 +110,14 @@ export function PromotionalBanners() {
                 {/* Search Bar */}
                 <div className="bg-white p-4 rounded-3xl border border-gray-100 shadow-sm flex items-center">
                     <div className="w-full relative group">
-                        <div className="absolute left-4 top-1/2 -translate-y-1/2 p-1.5 bg-gray-50 rounded-lg group-focus-within:bg-[#FF6B35] transition-colors">
+                        <div className="absolute left-4 top-1/2 -translate-y-1/2 p-1.5 bg-gray-50 rounded-lg group-focus-within:bg-[#E4983A] transition-colors">
                             <Search className="h-4 w-4 text-gray-400 group-focus-within:text-white transition-colors" />
                         </div>
                         <Input
                             placeholder="Search banners..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="!pl-16 bg-gray-50 border-transparent rounded-2xl px-4 py-4 font-medium focus:bg-white focus:ring-4 focus:ring-[#FF6B35]/10 focus:border-[#FF6B35] outline-none transition-all hover:bg-white hover:border-gray-200 shadow-none text-lg"
+                            className="!pl-16 bg-gray-50 border-transparent rounded-2xl px-4 py-4 font-medium focus:bg-white focus:ring-4 focus:ring-[#E4983A]/10 focus:border-[#E4983A] outline-none transition-all hover:bg-white hover:border-gray-200 shadow-none text-lg"
                         />
                     </div>
                 </div>
@@ -170,7 +170,7 @@ export function PromotionalBanners() {
                                     cell: (item: any) => (
                                         <div className="flex gap-3">
                                             <button
-                                                className="p-2.5 bg-gray-50 text-gray-400 rounded-xl hover:bg-[#FF6B35]/10 hover:text-[#FF6B35] transition-all"
+                                                className="p-2.5 bg-gray-50 text-gray-400 rounded-xl hover:bg-[#E4983A]/10 hover:text-[#E4983A] transition-all"
                                                 onClick={() => handleViewDetails(item)}
                                             >
                                                 <Eye className="h-5 w-5" />

@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+﻿import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Bell, Settings, X, CheckCircle, AlertCircle, Info } from 'lucide-react';
 import { Avatar } from '../ui/Avatar';
@@ -66,12 +66,12 @@ export function TopBar() {
             <div className="flex items-center justify-between p-4 border-b border-gray-100 bg-gradient-to-r from-orange-50 to-white">
               <div className="flex items-center gap-2">
                 <h3 className="font-bold text-gray-900">Notifications</h3>
-                {unreadCount > 0 && <span className="bg-[#FF6B35] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">{unreadCount}</span>}
+                {unreadCount > 0 && <span className="bg-[#E4983A] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">{unreadCount}</span>}
               </div>
               <div className="flex items-center gap-2">
                 <button
                   onClick={handleMarkAllRead}
-                  className="text-xs font-bold text-[#FF6B35] hover:text-[#E85A2D] transition-colors"
+                  className="text-xs font-bold text-[#E4983A] hover:text-[#E85A2D] transition-colors"
                 >
                   Mark all as read
                 </button>
@@ -102,7 +102,7 @@ export function TopBar() {
                   setShowNotifications(false);
                   navigate('/notifications');
                 }}
-                className="text-sm font-bold text-[#FF6B35] hover:text-[#E85A2D] transition-colors"
+                className="text-sm font-bold text-[#E4983A] hover:text-[#E85A2D] transition-colors"
               >
                 View All Notifications
               </button>
@@ -130,7 +130,7 @@ export function TopBar() {
           </p>
           <p className="text-xs text-gray-500">Super Admin</p>
         </div>
-        <Avatar fallback="OL" src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" className="ring-2 ring-white shadow-sm hover:ring-[#FF6B35]/20 transition-all" />
+        <Avatar fallback="OL" src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" className="ring-2 ring-white shadow-sm hover:ring-[#E4983A]/20 transition-all" />
       </div>
     </div>
   </header>;

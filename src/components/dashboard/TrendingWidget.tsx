@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+﻿import { useNavigate } from 'react-router-dom';
 import { Card } from '../ui/Card';
 import { useGetTrendingMenusQuery } from '../../redux/features/dashboardApi';
 import { useState } from 'react';
@@ -21,7 +21,7 @@ export function TrendingWidget() {
             <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
           </div>
           <div className="p-5">
-            <h4 className="font-bold text-gray-900 mb-1 group-hover:text-[#FF6B35] transition-colors line-clamp-2">{item.title}</h4>
+            <h4 className="font-bold text-[#E4983A] mb-1 group-hover:text-[#E4983A] transition-colors line-clamp-2">{item.title}</h4>
             <p className="text-xs text-gray-500 mb-4">{item.category || 'Standard Menu'}</p>
 
             <div className="flex items-center justify-between">
@@ -29,10 +29,10 @@ export function TrendingWidget() {
                 <span className="flex items-center font-medium">
                   {item.totalOrders} orders
                 </span>
-                <span className="text-gray-400">•</span>
+                <span className="text-gray-400">â€¢</span>
                 <span className="text-gray-500">{item.totalQuantity} items sold</span>
               </div>
-              <span className="font-bold text-lg text-[#FF6B35]">
+              <span className="font-bold text-lg text-[#E4983A]">
                 ${(item.totalRevenue / item.totalQuantity).toFixed(2)}
               </span>
             </div>

@@ -1,7 +1,8 @@
-import { X, Download, Receipt } from 'lucide-react';
+﻿import { X, Download, Receipt } from 'lucide-react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { useRef } from 'react';
+import { getAppLogo } from '../../utils/logo';
 
 interface InvoiceModalProps {
     isOpen: boolean;
@@ -59,7 +60,7 @@ export function InvoiceModal({ isOpen, onClose, orderData }: InvoiceModalProps) 
                 {/* Header */}
                 <div className="flex items-center justify-between p-6 border-b border-gray-100 bg-gradient-to-r from-orange-50 to-white">
                     <div className="flex items-center gap-3">
-                        <div className="p-2 bg-[#FF6B35] rounded-xl shadow-lg shadow-orange-500/20">
+                        <div className="p-2 bg-[#E4983A] rounded-xl shadow-lg shadow-orange-500/20">
                             <Receipt className="h-6 w-6 text-white" />
                         </div>
                         <div>
@@ -83,7 +84,7 @@ export function InvoiceModal({ isOpen, onClose, orderData }: InvoiceModalProps) 
                             <div>
                                 <div className="flex items-center gap-3 mb-3">
                                     <div className="w-12 h-12 mb-2 transform transition-transform hover:rotate-6 duration-300">
-                                        <img src="/logo.png" alt="DineFive" className="w-full h-full object-contain" />
+                                        <img src={getAppLogo()} alt="DineFive" className="w-full h-full object-contain" />
                                     </div>
                                     <div>
                                         <h1 className="text-2xl font-bold text-gray-900">DineFive</h1>
@@ -98,7 +99,7 @@ export function InvoiceModal({ isOpen, onClose, orderData }: InvoiceModalProps) 
                                 </div>
                             </div>
                             <div className="text-right">
-                                <h2 className="text-3xl font-bold text-[#FF6B35] mb-2">INVOICE</h2>
+                                <h2 className="text-3xl font-bold text-[#E4983A] mb-2">INVOICE</h2>
                                 <div className="text-sm text-gray-600 space-y-1">
                                     <p><span className="font-semibold">Invoice #:</span> {orderData.id}</p>
                                     <p><span className="font-semibold">Date:</span> {orderData.date}</p>
@@ -150,7 +151,7 @@ export function InvoiceModal({ isOpen, onClose, orderData }: InvoiceModalProps) 
                                 </div>
                                 <div className="flex justify-between text-xl font-bold text-gray-900 pt-3 border-t-2 border-gray-200">
                                     <span>Total:</span>
-                                    <span className="text-[#FF6B35]">${orderData.total.toFixed(2)}</span>
+                                    <span className="text-[#E4983A]">${orderData.total.toFixed(2)}</span>
                                 </div>
                             </div>
                         </div>
@@ -158,7 +159,7 @@ export function InvoiceModal({ isOpen, onClose, orderData }: InvoiceModalProps) 
                         {/* Footer Note */}
                         <div className="pt-6 border-t border-gray-200 text-center">
                             <p className="text-sm text-gray-500">
-                                Thank you for choosing DineFive! 🍱
+                                Thank you for choosing DineFive! ðŸ±
                             </p>
                             <p className="text-xs text-gray-400 mt-2">
                                 This invoice was generated electronically and is valid without signature.
@@ -177,7 +178,7 @@ export function InvoiceModal({ isOpen, onClose, orderData }: InvoiceModalProps) 
                     </button>
                     <button
                         onClick={handleDownloadPDF}
-                        className="px-6 py-3 rounded-xl font-bold text-white bg-[#FF6B35] hover:bg-[#E85A2D] shadow-lg shadow-orange-500/20 hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center gap-2"
+                        className="px-6 py-3 rounded-xl font-bold text-white bg-[#E4983A] hover:bg-[#E85A2D] shadow-lg shadow-orange-500/20 hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center gap-2"
                     >
                         <Download className="h-4 w-4" />
                         Download Invoice

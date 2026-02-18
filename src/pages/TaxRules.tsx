@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+﻿import { useState, useMemo } from 'react';
 import { AdminLayout } from '../components/layout/AdminLayout';
 import { Table } from '../components/ui/Table';
 import { Button } from '../components/ui/Button';
@@ -168,7 +168,7 @@ export function TaxRules() {
     return (
       <AdminLayout>
         <div className="flex items-center justify-center min-h-[400px]">
-          <Loader2 className="h-10 w-10 text-[#FF6B35] animate-spin" />
+          <Loader2 className="h-10 w-10 text-[#E4983A] animate-spin" />
         </div>
       </AdminLayout>
     );
@@ -215,7 +215,7 @@ export function TaxRules() {
                   checked={editIsActive}
                   onChange={(e) => setEditIsActive(e.target.checked)}
                 />
-                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#FF6B35]"></div>
+                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#E4983A]"></div>
               </label>
               <span className="text-sm font-medium text-gray-700">
                 {editIsActive ? 'Active' : 'Inactive'}
@@ -285,7 +285,7 @@ export function TaxRules() {
                 <select
                   value={selectedState}
                   onChange={(e) => setSelectedState(e.target.value)}
-                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-[#FF6B35]/20 focus:border-[#FF6B35] transition-all"
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-[#E4983A]/20 focus:border-[#E4983A] transition-all"
                 >
                   <option value="">Select State</option>
                   {availableStates.map(state => (
@@ -301,7 +301,7 @@ export function TaxRules() {
                   value={taxRate}
                   onChange={(e) => setTaxRate(e.target.value)}
                   placeholder="e.g., 7.25"
-                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-[#FF6B35]/20 focus:border-[#FF6B35] transition-all"
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-[#E4983A]/20 focus:border-[#E4983A] transition-all"
                 />
               </div>
               <div className="flex items-end gap-2">
@@ -327,7 +327,7 @@ export function TaxRules() {
         <Card className="p-6">
           <div className="flex items-center gap-4">
             <div className="p-3 bg-orange-50 rounded-xl">
-              <FileText className="h-6 w-6 text-[#FF6B35]" />
+              <FileText className="h-6 w-6 text-[#E4983A]" />
             </div>
             <div>
               <p className="text-sm text-gray-500">Total States</p>
@@ -376,7 +376,7 @@ export function TaxRules() {
         }, {
           header: 'Tax Rate',
           accessorKey: 'rate',
-          className: 'text-[#FF6B35] font-bold'
+          className: 'text-[#E4983A] font-bold'
         }, {
           header: 'Status',
           cell: (item: any) => <Badge variant={item.status === 'Active' ? 'success' : 'default'}>

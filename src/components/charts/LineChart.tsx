@@ -1,4 +1,4 @@
-import { LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, AreaChart, Area } from 'recharts';
+﻿import { LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, AreaChart, Area } from 'recharts';
 import { Card } from '../ui/Card';
 
 interface LineChartProps {
@@ -14,7 +14,7 @@ export function LineChart({
   data,
   height = 300,
   lines = [
-    { key: 'income', color: '#FF6B35', name: 'Income' },
+    { key: 'income', color: '#E4983A', name: 'Income' },
     { key: 'expense', color: '#1F2937', name: 'Expense' }
   ],
   variant = 'line'

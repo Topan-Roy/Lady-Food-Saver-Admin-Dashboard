@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+﻿import { useState, useRef, useEffect } from 'react';
 import { ChevronDown } from 'lucide-react';
 
 interface Option {
@@ -35,7 +35,7 @@ export function Select({ options, value, onChange, placeholder = 'Select option'
             <button
                 type="button"
                 onClick={() => setIsOpen(!isOpen)}
-                className={`flex items-center justify-between w-full h-11 px-4 bg-gray-50/50 border ${isOpen ? 'border-[#FF6B35] ring-4 ring-[#FF6B35]/5 bg-white' : 'border-gray-200'} rounded-xl text-sm font-medium text-gray-700 hover:bg-white hover:border-gray-300 transition-all duration-200`}
+                className={`flex items-center justify-between w-full h-11 px-4 bg-gray-50/50 border ${isOpen ? 'border-[#E4983A] ring-4 ring-[#E4983A]/5 bg-white' : 'border-gray-200'} rounded-xl text-sm font-medium text-gray-700 hover:bg-white hover:border-gray-300 transition-all duration-200`}
             >
                 <span className={!selectedOption ? 'text-gray-400' : ''}>
                     {selectedOption ? selectedOption.label : placeholder}
@@ -54,11 +54,11 @@ export function Select({ options, value, onChange, placeholder = 'Select option'
                                 setIsOpen(false);
                             }}
                             className={`flex items-center w-full px-4 py-2.5 text-sm text-left transition-colors ${option.value === value
-                                ? 'bg-gray-50 text-[#FF6B35] font-semibold'
+                                ? 'bg-gray-50 text-[#E4983A] font-semibold'
                                 : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                                 }`}
                         >
-                            <div className={`w-1 h-1 rounded-full mr-2 transition-transform duration-200 ${option.value === value ? 'bg-[#FF6B35] scale-100' : 'bg-transparent scale-0'}`} />
+                            <div className={`w-1 h-1 rounded-full mr-2 transition-transform duration-200 ${option.value === value ? 'bg-[#E4983A] scale-100' : 'bg-transparent scale-0'}`} />
                             {option.label}
                         </button>
                     ))}

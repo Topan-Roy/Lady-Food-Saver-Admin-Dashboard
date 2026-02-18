@@ -1,4 +1,4 @@
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
+﻿import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 import { Card } from '../ui/Card';
 import { Select } from '../ui/Select';
 interface DonutChartProps {
@@ -8,7 +8,7 @@ interface DonutChartProps {
   showFilter?: boolean;
 }
 
-const COLORS = ['#FF6B35', '#FDBA74', '#1F2937', '#9CA3AF'];
+const COLORS = ['#E4983A', '#FDBA74', '#1F2937', '#9CA3AF'];
 
 export function DonutChart({
   title,

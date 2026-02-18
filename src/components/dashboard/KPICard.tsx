@@ -18,7 +18,7 @@ export function KPICard({
   color = 'orange'
 }: KPICardProps) {
   const colors = {
-    orange: 'bg-orange-50 text-orange-600',
+    orange: 'bg-orange-50 text-[#E4983A]',
     blue: 'bg-blue-50 text-blue-600',
     green: 'bg-green-50 text-green-600',
     purple: 'bg-purple-50 text-purple-600'

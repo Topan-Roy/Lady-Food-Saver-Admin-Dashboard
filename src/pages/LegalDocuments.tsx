@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useEffect } from 'react';
+﻿import { useState, useMemo, useRef, useEffect } from 'react';
 import { AdminLayout } from '../components/layout/AdminLayout';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
@@ -149,7 +149,7 @@ export function LegalDocuments() {
         return (
             <AdminLayout>
                 <div className="flex items-center justify-center min-h-[400px]">
-                    <Loader2 className="h-10 w-10 text-[#FF6B35] animate-spin" />
+                    <Loader2 className="h-10 w-10 text-[#E4983A] animate-spin" />
                 </div>
             </AdminLayout>
         );
@@ -182,7 +182,7 @@ export function LegalDocuments() {
                 >
                     <form onSubmit={handleUploadSubmit} className="space-y-6">
                         <div
-                            className={`border-2 border-dashed rounded-xl p-8 flex flex-col items-center justify-center cursor-pointer transition-all ${selectedFile ? 'border-green-400 bg-green-50' : 'border-gray-200 hover:border-[#FF6B35] hover:bg-orange-50'}`}
+                            className={`border-2 border-dashed rounded-xl p-8 flex flex-col items-center justify-center cursor-pointer transition-all ${selectedFile ? 'border-green-400 bg-green-50' : 'border-gray-200 hover:border-[#E4983A] hover:bg-orange-50'}`}
                             onClick={() => fileInputRef.current?.click()}
                         >
                             <input
@@ -202,7 +202,7 @@ export function LegalDocuments() {
                                 </>
                             ) : (
                                 <>
-                                    <div className="h-12 w-12 bg-orange-100 rounded-full flex items-center justify-center mb-3 text-[#FF6B35]">
+                                    <div className="h-12 w-12 bg-orange-100 rounded-full flex items-center justify-center mb-3 text-[#E4983A]">
                                         <Upload className="h-6 w-6" />
                                     </div>
                                     <p className="text-sm font-medium text-gray-900">Click to browse or drag and drop</p>
@@ -222,7 +222,7 @@ export function LegalDocuments() {
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
                                 <select
-                                    className="block w-full h-11 rounded-xl border-gray-200 bg-gray-50/50 focus:bg-white focus:border-[#FF6B35] focus:ring-[#FF6B35] sm:text-sm transition-all outline-none px-4"
+                                    className="block w-full h-11 rounded-xl border-gray-200 bg-gray-50/50 focus:bg-white focus:border-[#E4983A] focus:ring-[#E4983A] sm:text-sm transition-all outline-none px-4"
                                     value={uploadStatus}
                                     onChange={(e) => setUploadStatus(e.target.value)}
                                 >

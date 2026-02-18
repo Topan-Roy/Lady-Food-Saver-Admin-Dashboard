@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+﻿import { useState, useEffect, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../redux/store';
 import { Modal } from '../ui/Modal';
@@ -108,7 +108,7 @@ export function SupportChatModal({
       <div className="bg-gray-200/50 backdrop-blur-sm p-4 rounded-2xl mb-4 flex justify-between items-center border border-gray-100">
         <div className="flex items-center gap-3">
           <div className="h-12 w-12 rounded-full bg-white shadow-sm flex items-center justify-center border border-gray-100">
-            <User className="h-6 w-6 text-[#FF6B35]" />
+            <User className="h-6 w-6 text-[#E4983A]" />
           </div>
           <div>
             <p className="font-bold text-gray-900 group">
@@ -117,7 +117,7 @@ export function SupportChatModal({
             </p>
             <p className="text-xs font-medium text-gray-500 flex items-center gap-2">
               <span className={`h-2 w-2 rounded-full ${ticket.status === 'Open' ? 'bg-red-500' : 'bg-green-500'}`} />
-              {ticket.userType || ticket.type} • {ticket.status}
+              {ticket.userType || ticket.type} â€¢ {ticket.status}
             </p>
           </div>
         </div>
@@ -157,7 +157,7 @@ export function SupportChatModal({
               <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2 duration-300`}>
                 <div className={`max-w-[75%] space-y-1`}>
                   <div className={`p-4 rounded-2xl shadow-sm ${isMe
-                    ? 'bg-[#FF6B35] text-white rounded-tr-none'
+                    ? 'bg-[#E4983A] text-white rounded-tr-none'
                     : 'bg-white text-gray-800 rounded-tl-none border border-gray-100'
                     }`}>
                     {msg.attachmentUrl && (
@@ -165,7 +165,7 @@ export function SupportChatModal({
                     )}
                     <p className="text-[14px] leading-relaxed font-medium">{msg.content || msg.text}</p>
                   </div>
-                  <p className={`text-[10px] font-bold uppercase tracking-wider ${isMe ? 'text-right text-[#FF6B35]/50' : 'text-gray-400'}`}>
+                  <p className={`text-[10px] font-bold uppercase tracking-wider ${isMe ? 'text-right text-[#E4983A]/50' : 'text-gray-400'}`}>
                     {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </p>
                 </div>

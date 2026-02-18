@@ -1,4 +1,4 @@
-import { X, Download, FileText } from 'lucide-react';
+﻿import { X, Download, FileText } from 'lucide-react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { useRef } from 'react';
@@ -51,7 +51,7 @@ export function ExportPreviewModal({ isOpen, onClose, data, title }: ExportPrevi
                 {/* Header */}
                 <div className="flex items-center justify-between p-6 border-b border-gray-100 bg-gradient-to-r from-orange-50 to-white">
                     <div className="flex items-center gap-3">
-                        <div className="p-2 bg-[#FF6B35] rounded-xl shadow-lg shadow-orange-500/20">
+                        <div className="p-2 bg-[#E4983A] rounded-xl shadow-lg shadow-orange-500/20">
                             <FileText className="h-6 w-6 text-white" />
                         </div>
                         <div>
@@ -124,7 +124,7 @@ export function ExportPreviewModal({ isOpen, onClose, data, title }: ExportPrevi
                     </button>
                     <button
                         onClick={handleDownloadPDF}
-                        className="px-6 py-3 rounded-xl font-bold text-white bg-[#FF6B35] hover:bg-[#E85A2D] shadow-lg shadow-orange-500/20 hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center gap-2"
+                        className="px-6 py-3 rounded-xl font-bold text-white bg-[#E4983A] hover:bg-[#E85A2D] shadow-lg shadow-orange-500/20 hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center gap-2"
                     >
                         <Download className="h-4 w-4" />
                         Download PDF

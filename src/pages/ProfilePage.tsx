@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { AdminLayout } from '../components/layout/AdminLayout';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
@@ -37,7 +37,7 @@ export function ProfilePage() {
                                 fallback="OL"
                                 className="w-32 h-32 rounded-3xl border-4 border-white shadow-xl ring-1 ring-gray-100"
                             />
-                            <button className="absolute bottom-2 right-2 p-2 bg-white rounded-full shadow-lg border border-gray-100 text-gray-400 hover:text-[#FF6B35] transition-colors">
+                            <button className="absolute bottom-2 right-2 p-2 bg-white rounded-full shadow-lg border border-gray-100 text-gray-400 hover:text-[#E4983A] transition-colors">
                                 <Camera className="h-4 w-4" />
                             </button>
                         </div>
@@ -123,7 +123,7 @@ export function ProfilePage() {
                                         onChange={(e) => setUser({ ...user, bio: e.target.value })}
                                         disabled={!isEditing}
                                         rows={4}
-                                        className={`w-full rounded-2xl border-2 px-4 py-3 font-medium outline-none transition-all ${isEditing ? 'border-gray-100 focus:border-[#FF6B35]' : 'bg-gray-50 border-transparent text-gray-500'}`}
+                                        className={`w-full rounded-2xl border-2 px-4 py-3 font-medium outline-none transition-all ${isEditing ? 'border-gray-100 focus:border-[#E4983A]' : 'bg-gray-50 border-transparent text-gray-500'}`}
                                     />
                                 </div>
                             </div>

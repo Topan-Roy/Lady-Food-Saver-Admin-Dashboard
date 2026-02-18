@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+﻿import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AdminLayout } from '../components/layout/AdminLayout';
 import { Table } from '../components/ui/Table';
@@ -6,9 +6,10 @@ import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { FilterSelect } from '../components/ui/FilterSelect';
+import { GlobalFilter, FilterRange } from '../components/ui/GlobalFilter';
 import { KPICard } from '../components/dashboard/KPICard';
 import { ExportPreviewModal } from '../components/modals/ExportPreviewModal';
-import { FileText, DollarSign, CreditCard, TrendingUp, Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { FileText, DollarSign, CreditCard, TrendingUp, Search, ChevronLeft, ChevronRight, Calendar } from 'lucide-react';
 import { useGetTransactionOrdersQuery, useGetAllRestaurantsQuery } from '../redux/features/dashboardApi';
 
 interface TransactionItem {
@@ -23,6 +24,8 @@ export function OrdersTransactions() {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all_status');
+  const [timeFilter, setTimeFilter] = useState<FilterRange>('week');
+  const [customDates, setCustomDates] = useState<{ start: Date; end: Date } | undefined>(undefined);
   const [showExportModal, setShowExportModal] = useState(false);
   const [page, setPage] = useState(1);
   const [selectedProviderId, setSelectedProviderId] = useState('69714abce548ab10b90c0e50');
@@ -34,7 +37,10 @@ export function OrdersTransactions() {
     providerId: selectedProviderId,
     status: statusFilter,
     page,
-    limit: 20
+    limit: 20,
+    timeFilter,
+    startDate: customDates?.start?.toISOString(),
+    endDate: customDates?.end?.toISOString(),
   });
 
   const summary = transactionsData?.summary || {
@@ -88,14 +94,14 @@ export function OrdersTransactions() {
           </p>
         </div>
         <div className="flex gap-3">
-          <div className="w-64">
+          {/* <div className="w-64">
             <FilterSelect
               label="Restaurant"
               value={selectedProviderId}
               onChange={setSelectedProviderId}
               options={restaurantOptions}
             />
-          </div>
+          </div> */}
           <Button variant="secondary" leftIcon={<FileText className="h-4 w-4" />} onClick={() => setShowExportModal(true)}>
             Export Report
           </Button>
@@ -115,19 +121,19 @@ export function OrdersTransactions() {
           <div className="flex items-center gap-4 flex-1">
             <h3 className="font-bold text-gray-900 whitespace-nowrap">Transactions</h3>
             <div className="relative flex-1 max-w-md group">
-              <div className="absolute left-4 top-1/2 -translate-y-1/2 p-1.5 bg-gray-50 rounded-lg group-focus-within:bg-[#FF6B35] transition-colors">
+              <div className="absolute left-4 top-1/2 -translate-y-1/2 p-1.5 bg-gray-50 rounded-lg group-focus-within:bg-[#E4983A] transition-colors">
                 <Search className="h-4 w-4 text-gray-400 group-focus-within:text-white transition-colors" />
               </div>
               <Input
                 placeholder="Search transactions..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="!pl-16 bg-gray-50 border-transparent rounded-2xl px-4 py-3 font-medium focus:bg-white focus:ring-4 focus:ring-[#FF6B35]/10 focus:border-[#FF6B35] outline-none transition-all hover:bg-white hover:border-gray-200 shadow-none h-auto text-sm"
+                className="!pl-16 bg-gray-50 border-transparent rounded-2xl px-4 py-3 font-medium focus:bg-white focus:ring-4 focus:ring-[#E4983A]/10 focus:border-[#E4983A] outline-none transition-all hover:bg-white hover:border-gray-200 shadow-none h-auto text-sm"
               />
             </div>
           </div>
 
-          <div className="flex gap-2 items-center">
+          <div className="flex gap-3 items-center">
             <FilterSelect
               label="Status"
               value={statusFilter}
@@ -140,6 +146,13 @@ export function OrdersTransactions() {
                 { label: 'Ready for Pickup', value: 'ready_for_pickup' },
                 { label: 'Cancelled', value: 'cancelled' },
               ]}
+            />
+            <GlobalFilter
+              label="Time Range"
+              onFilterChange={(range, custom) => {
+                setTimeFilter(range);
+                if (custom) setCustomDates(custom);
+              }}
             />
           </div>
         </div>

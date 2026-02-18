@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, isWithinInterval, startOfWeek, endOfWeek } from 'date-fns';
 import { clsx, type ClassValue } from 'clsx';
@@ -98,9 +98,9 @@ export function Calendar({ mode = 'single', selected, onSelect, className }: Cal
                             className={cn(
                                 "h-9 w-9 rounded-xl flex items-center justify-center text-sm font-medium transition-all relative z-10",
                                 !isCurrentMonth && "text-gray-300 opacity-50",
-                                isCurrentMonth && !isSelectedDay && !isRangeDay && "text-gray-700 hover:bg-gray-50 hover:text-[#FF6B35]",
-                                isSelectedDay && "bg-[#FF6B35] text-white shadow-lg shadow-orange-500/30 font-bold",
-                                isRangeDay && !isSelectedDay && "bg-orange-50 text-[#FF6B35] rounded-none first:rounded-l-xl last:rounded-r-xl"
+                                isCurrentMonth && !isSelectedDay && !isRangeDay && "text-gray-700 hover:bg-gray-50 hover:text-[#E4983A]",
+                                isSelectedDay && "bg-[#E4983A] text-white shadow-lg shadow-orange-500/30 font-bold",
+                                isRangeDay && !isSelectedDay && "bg-orange-50 text-[#E4983A] rounded-none first:rounded-l-xl last:rounded-r-xl"
                             )}
                         >
                             {format(date, 'd')}

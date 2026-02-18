@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { Modal } from '../ui/Modal';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
@@ -42,11 +42,11 @@ export function AddTaxRuleModal({
         </label>
         <div className="flex gap-4 mt-2">
           <label className="flex items-center gap-2">
-            <input type="radio" name="status" defaultChecked className="text-[#FF6B35] focus:ring-[#FF6B35]" />
+            <input type="radio" name="status" defaultChecked className="text-[#E4983A] focus:ring-[#E4983A]" />
             <span className="text-sm text-gray-700">Active</span>
           </label>
           <label className="flex items-center gap-2">
-            <input type="radio" name="status" className="text-[#FF6B35] focus:ring-[#FF6B35]" />
+            <input type="radio" name="status" className="text-[#E4983A] focus:ring-[#E4983A]" />
             <span className="text-sm text-gray-700">Inactive</span>
           </label>
         </div>

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+﻿import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AdminLayout } from '../components/layout/AdminLayout';
 import { LineChart } from '../components/charts/LineChart';
@@ -101,7 +101,7 @@ export function Analytics() {
     if (timeFilter === 'today') key = 'today';
     if (timeFilter === '30d' || timeFilter === '12m' || timeFilter === 'year') key = '30d';
 
-    // @ts-ignore
+    // ts-ignore
     setData(mockData[key] || mockData['7d']);
   }, [timeFilter]);
 
@@ -188,7 +188,7 @@ export function Analytics() {
             title="Orders Overview"
             data={orderStatsData}
             height={350}
-            lines={[{ key: 'orders', color: '#FF6B35', name: 'Orders' }]}
+            lines={[{ key: 'orders', color: '#E4983A', name: 'Orders' }]}
           />
         </div>
         <div className="h-[400px]">
@@ -203,7 +203,7 @@ export function Analytics() {
             title="Customer Analysis"
             data={data.userAnalysis}
             height={350}
-            lines={[{ key: 'active', color: '#FF6B35', name: 'Active Customers' }]}
+            lines={[{ key: 'active', color: '#E4983A', name: 'Active Customers' }]}
             variant="area"
           />
         </div>
@@ -233,7 +233,7 @@ export function Analytics() {
               header: 'Restaurant Name',
               cell: (item) => (
                 <span
-                  className="font-medium text-gray-900 cursor-pointer hover:text-[#FF6B35] transition-colors"
+                  className="font-medium text-gray-900 cursor-pointer hover:text-[#E4983A] transition-colors"
                   onClick={() => navigate(`/restaurant/${item.id}`)}
                 >
                   {item.name}
@@ -245,7 +245,7 @@ export function Analytics() {
             }, {
               header: 'Total Revenue',
               accessorKey: 'revenue',
-              className: 'text-[#FF6B35] font-bold'
+              className: 'text-[#E4983A] font-bold'
             }]} />
           )}
         </div>

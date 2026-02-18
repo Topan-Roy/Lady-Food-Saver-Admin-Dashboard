@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+﻿import { useState, useRef, useEffect } from 'react';
 import { Calendar, ChevronDown, Check } from 'lucide-react';
 import { format } from 'date-fns';
 import { clsx, type ClassValue } from 'clsx';
@@ -12,16 +12,15 @@ function cn(...inputs: ClassValue[]) {
 export type FilterRange = 'today' | 'week' | 'month' | 'year' | 'custom';
 
 interface GlobalFilterProps {
+    label?: string;
     onFilterChange: (range: FilterRange, customDates?: { start: Date; end: Date }) => void;
     className?: string;
 }
 
-export function GlobalFilter({ onFilterChange, className }: GlobalFilterProps) {
+export function GlobalFilter({ label, onFilterChange, className }: GlobalFilterProps) {
     const [isOpen, setIsOpen] = useState(false);
     const [selectedRange, setSelectedRange] = useState<FilterRange>('week');
     const [showCustomPicker, setShowCustomPicker] = useState(false);
-    const [startDate, setStartDate] = useState<Date | null>(null);
-    const [endDate, setEndDate] = useState<Date | null>(null);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
     // New state for advanced picker
@@ -85,12 +84,17 @@ export function GlobalFilter({ onFilterChange, className }: GlobalFilterProps) {
         <div className={cn("relative", className)} ref={dropdownRef}>
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="flex items-center gap-3 bg-white border border-gray-100 px-5 py-3 rounded-2xl shadow-sm hover:border-[#FF6B35] hover:shadow-md transition-all group"
+                className="flex items-center gap-3 bg-white border border-gray-100 px-5 py-3 rounded-2xl shadow-sm hover:border-[#E4983A] hover:shadow-md transition-all group min-w-[200px] justify-between"
             >
-                <div className="p-1.5 bg-orange-50 rounded-lg group-hover:bg-[#FF6B35] transition-colors">
-                    <Calendar className="h-4 w-4 text-[#FF6B35] group-hover:text-white transition-colors" />
+                <div className="flex items-center gap-3">
+                    <div className="p-1.5 bg-orange-50 rounded-lg group-hover:bg-[#E4983A] transition-colors">
+                        <Calendar className="h-4 w-4 text-[#E4983A] group-hover:text-white transition-colors" />
+                    </div>
+                    <div className="text-left">
+                        {label && <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">{label}</p>}
+                        <span className="text-sm font-bold text-gray-700 block">{getActiveLabel()}</span>
+                    </div>
                 </div>
-                <span className="text-sm font-bold text-gray-700">{getActiveLabel()}</span>
                 <ChevronDown className={cn("h-4 w-4 text-gray-400 transition-transform duration-300", isOpen && "rotate-180")} />
             </button>
 
@@ -105,7 +109,7 @@ export function GlobalFilter({ onFilterChange, className }: GlobalFilterProps) {
                                     className={cn(
                                         "flex items-center justify-between w-full px-4 py-3.5 rounded-2xl text-sm font-semibold transition-all duration-200",
                                         selectedRange === range.value
-                                            ? "bg-[#FF6B35] text-white shadow-lg shadow-orange-500/20"
+                                            ? "bg-[#E4983A] text-white shadow-lg shadow-orange-500/20"
                                             : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                                     )}
                                 >
@@ -132,7 +136,7 @@ export function GlobalFilter({ onFilterChange, className }: GlobalFilterProps) {
                                     onClick={() => setFilterType('single')}
                                     className={cn(
                                         "flex-1 py-2 text-xs font-bold uppercase tracking-wider rounded-lg transition-all",
-                                        filterType === 'single' ? "bg-white text-[#FF6B35] shadow-sm" : "text-gray-500 hover:text-gray-700"
+                                        filterType === 'single' ? "bg-white text-[#E4983A] shadow-sm" : "text-gray-500 hover:text-gray-700"
                                     )}
                                 >
                                     Single Date
@@ -141,7 +145,7 @@ export function GlobalFilter({ onFilterChange, className }: GlobalFilterProps) {
                                     onClick={() => setFilterType('range')}
                                     className={cn(
                                         "flex-1 py-2 text-xs font-bold uppercase tracking-wider rounded-lg transition-all",
-                                        filterType === 'range' ? "bg-white text-[#FF6B35] shadow-sm" : "text-gray-500 hover:text-gray-700"
+                                        filterType === 'range' ? "bg-white text-[#E4983A] shadow-sm" : "text-gray-500 hover:text-gray-700"
                                     )}
                                 >
                                     Date Range
@@ -163,7 +167,7 @@ export function GlobalFilter({ onFilterChange, className }: GlobalFilterProps) {
                             <button
                                 disabled={filterType === 'single' ? !singleDate : (!dateRange?.from || !dateRange?.to)}
                                 onClick={handleApplyCustom}
-                                className="w-full bg-[#FF6B35] text-white font-bold py-3.5 rounded-2xl shadow-lg shadow-orange-500/20 hover:bg-[#E85A2D] hover:shadow-orange-500/30 disabled:opacity-50 disabled:shadow-none transition-all active:scale-[0.98]"
+                                className="w-full bg-[#E4983A] text-white font-bold py-3.5 rounded-2xl shadow-lg shadow-orange-500/20 hover:bg-[#E85A2D] hover:shadow-orange-500/30 disabled:opacity-50 disabled:shadow-none transition-all active:scale-[0.98]"
                             >
                                 Apply Filter
                             </button>

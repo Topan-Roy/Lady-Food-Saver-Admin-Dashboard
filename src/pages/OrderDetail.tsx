@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { AdminLayout } from '../components/layout/AdminLayout';
 import { Button } from '../components/ui/Button';
@@ -105,7 +105,7 @@ export function OrderDetail() {
               </div>
               <div className="flex justify-between text-lg font-bold text-gray-900 pt-2">
                 <span>Total</span>
-                <span className="text-[#FF6B35]">{order.total}</span>
+                <span className="text-[#E4983A]">{order.total}</span>
               </div>
             </div>
           </Card>
@@ -129,7 +129,7 @@ export function OrderDetail() {
                 time: '2:30 PM',
                 active: true
               }].map((step, i) => <div key={i} className="relative pl-8 border-l-2 border-gray-200 last:border-0">
-                <div className={`absolute -left-[9px] top-0 h-4 w-4 rounded-full ${step.active ? 'bg-[#FF6B35]' : 'bg-gray-300'}`} />
+                <div className={`absolute -left-[9px] top-0 h-4 w-4 rounded-full ${step.active ? 'bg-[#E4983A]' : 'bg-gray-300'}`} />
                 <p className="font-medium text-gray-900 leading-none">
                   {step.title}
                 </p>
@@ -142,7 +142,7 @@ export function OrderDetail() {
         <div className="space-y-6">
           <Card title="Customer Details">
             <div className="flex items-center gap-4 mb-4">
-              <div className="h-12 w-12 bg-orange-100 rounded-full flex items-center justify-center text-[#FF6B35]">
+              <div className="h-12 w-12 bg-orange-100 rounded-full flex items-center justify-center text-[#E4983A]">
                 <User className="h-6 w-6" />
               </div>
               <div>

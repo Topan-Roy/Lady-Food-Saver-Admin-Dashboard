@@ -1,4 +1,4 @@
-import { BarChart as RechartsBarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+﻿import { BarChart as RechartsBarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Card } from '../ui/Card';
 
 interface BarChartProps {
@@ -31,7 +31,7 @@ export function BarChart({
             fontSize: 12
           }} dy={10} />
           <YAxis axisLine={false} tickLine={false} tick={{
-            fill: '#9CA3AF',
+            fill: '#E4983A',
             fontSize: 12
           }} />
           <Tooltip cursor={{
@@ -43,11 +43,11 @@ export function BarChart({
           }} />
           <Bar
             dataKey="value"
-            fill="#FF6B35"
+            fill="#E4983A"
             radius={[8, 8, 0, 0]}
             barSize={40}
             activeBar={{
-              fill: '#E85A2D'
+              fill: '#E4983A'
             }}
           />
         </RechartsBarChart>

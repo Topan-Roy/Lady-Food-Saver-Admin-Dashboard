@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card } from '../ui/Card';
 import { Avatar } from '../ui/Avatar';
@@ -77,7 +77,7 @@ export function CustomerReviews({ restaurantId }: CustomerReviewsProps) {
       </h3>
       <button
         onClick={handleViewAll}
-        className="text-sm font-semibold text-[#FF6B35] hover:text-[#E85A2D] hover:underline decoration-2 underline-offset-4 transition-all"
+        className="text-sm font-semibold text-[#E4983A] hover:text-[#E4983A] hover:underline decoration-2 underline-offset-4 transition-all"
       >
         View All
       </button>
@@ -94,7 +94,7 @@ export function CustomerReviews({ restaurantId }: CustomerReviewsProps) {
               </p>
               <p className="text-xs text-gray-500 font-medium mt-0.5">
                 Ordered from <span
-                  className="text-[#FF6B35] cursor-pointer hover:underline"
+                  className="text-[#E4983A] cursor-pointer hover:underline"
                   onClick={() => review.restaurantId && handleReviewClick(review.restaurantId)}
                 >{review.restaurant}</span>
               </p>
@@ -119,7 +119,7 @@ export function CustomerReviews({ restaurantId }: CustomerReviewsProps) {
         {review.images.length > 0 && (
           <div className="ml-[52px] mb-4 flex gap-3 overflow-x-auto pb-1">
             {review.images.map((img, idx) => (
-              <div key={idx} className="relative flex-shrink-0 w-24 h-24 rounded-2xl overflow-hidden border-2 border-gray-100 cursor-zoom-in hover:border-[#FF6B35]/30 transition-colors shadow-sm">
+              <div key={idx} className="relative flex-shrink-0 w-24 h-24 rounded-2xl overflow-hidden border-2 border-gray-100 cursor-zoom-in hover:border-[#E4983A]/30 transition-colors shadow-sm">
                 <img src={img} alt={`Review ${idx + 1}`} className="w-full h-full object-cover" />
               </div>
             ))}
@@ -130,9 +130,9 @@ export function CustomerReviews({ restaurantId }: CustomerReviewsProps) {
         <div className="ml-[52px]">
           {review.reply ? (
             <div className="flex gap-3 mt-4 bg-orange-50/50 p-4 rounded-xl border border-orange-100/50">
-              <CornerDownRight className="h-5 w-5 text-[#FF6B35] flex-shrink-0 mt-1" />
+              <CornerDownRight className="h-5 w-5 text-[#E4983A] flex-shrink-0 mt-1" />
               <div>
-                <p className="text-xs font-bold text-[#FF6B35] uppercase tracking-wide mb-1">Admin Response</p>
+                <p className="text-xs font-bold text-[#E4983A] uppercase tracking-wide mb-1">Admin Response</p>
                 <p className="text-sm text-gray-700">{review.reply.text}</p>
                 <p className="text-xs text-gray-400 mt-2">{review.reply.date}</p>
               </div>
@@ -141,7 +141,7 @@ export function CustomerReviews({ restaurantId }: CustomerReviewsProps) {
             replyingTo === review.id ? (
               <div className="mt-4 animate-in fade-in slide-in-from-top-2">
                 <textarea
-                  className="w-full p-3 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#FF6B35]/10 focus:border-[#FF6B35] outline-none transition-all placeholder:text-gray-400"
+                  className="w-full p-3 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#E4983A]/10 focus:border-[#E4983A] outline-none transition-all placeholder:text-gray-400"
                   rows={3}
                   placeholder="Type your reply to the customer..."
                   value={replyText}
@@ -159,7 +159,7 @@ export function CustomerReviews({ restaurantId }: CustomerReviewsProps) {
             ) : (
               <button
                 onClick={() => setReplyingTo(review.id)}
-                className="flex items-center gap-1.5 text-xs font-bold text-gray-400 hover:text-[#FF6B35] transition-colors py-1 px-2 -ml-2 rounded-lg hover:bg-orange-50"
+                className="flex items-center gap-1.5 text-xs font-bold text-gray-400 hover:text-[#E4983A] transition-colors py-1 px-2 -ml-2 rounded-lg hover:bg-orange-50"
               >
                 <MessageCircle className="h-3.5 w-3.5" />
                 Reply

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { AdminLayout } from "../components/layout/AdminLayout";
 import { Button } from "../components/ui/Button";
@@ -308,7 +308,7 @@ export function RestaurantDetail() {
               </h1>
               <div className="flex items-center gap-4 mt-3">
                 <span className="flex items-center gap-2 bg-white/10 backdrop-blur-xl px-4 py-1.5 rounded-full text-sm font-medium border border-white/10">
-                  <MapPin className="h-4 w-4 text-[#FF6B35]" />{" "}
+                  <MapPin className="h-4 w-4 text-[#E4983A]" />{" "}
                   {restaurant.address}
                 </span>
                 <div className="flex items-center gap-1.5 bg-yellow-400/20 backdrop-blur-xl px-4 py-1.5 rounded-full text-sm font-bold text-yellow-400 border border-yellow-400/20">
@@ -333,35 +333,35 @@ export function RestaurantDetail() {
         <div className="flex gap-2 p-1 bg-gray-100 rounded-2xl w-fit border border-gray-200 shadow-inner overflow-x-auto max-w-full">
           <button
             onClick={() => setActiveTab("details")}
-            className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 whitespace-nowrap ${activeTab === "details" ? "bg-white text-[#FF6B35] shadow-lg shadow-gray-200" : "text-gray-500 hover:text-gray-700"}`}
+            className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 whitespace-nowrap ${activeTab === "details" ? "bg-white text-[#E4983A] shadow-lg shadow-gray-200" : "text-gray-500 hover:text-gray-700"}`}
           >
             <Info className="h-4 w-4" />
             General Info
           </button>
           <button
             onClick={() => setActiveTab("items")}
-            className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 whitespace-nowrap ${activeTab === "items" ? "bg-white text-[#FF6B35] shadow-lg shadow-gray-200" : "text-gray-500 hover:text-gray-700"}`}
+            className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 whitespace-nowrap ${activeTab === "items" ? "bg-white text-[#E4983A] shadow-lg shadow-gray-200" : "text-gray-500 hover:text-gray-700"}`}
           >
             <Package className="h-4 w-4" />
             Product Items
           </button>
           <button
             onClick={() => setActiveTab("orders")}
-            className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 whitespace-nowrap ${activeTab === "orders" ? "bg-white text-[#FF6B35] shadow-lg shadow-gray-200" : "text-gray-500 hover:text-gray-700"}`}
+            className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 whitespace-nowrap ${activeTab === "orders" ? "bg-white text-[#E4983A] shadow-lg shadow-gray-200" : "text-gray-500 hover:text-gray-700"}`}
           >
             <History className="h-4 w-4" />
             Order History
           </button>
           <button
             onClick={() => setActiveTab("reviews")}
-            className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 whitespace-nowrap ${activeTab === "reviews" ? "bg-white text-[#FF6B35] shadow-lg shadow-gray-200" : "text-gray-500 hover:text-gray-700"}`}
+            className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 whitespace-nowrap ${activeTab === "reviews" ? "bg-white text-[#E4983A] shadow-lg shadow-gray-200" : "text-gray-500 hover:text-gray-700"}`}
           >
             <MessageCircle className="h-4 w-4" />
             Reviews
           </button>
           <button
             onClick={() => setActiveTab("documents")}
-            className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 whitespace-nowrap ${activeTab === "documents" ? "bg-white text-[#FF6B35] shadow-lg shadow-gray-200" : "text-gray-500 hover:text-gray-700"}`}
+            className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 whitespace-nowrap ${activeTab === "documents" ? "bg-white text-[#E4983A] shadow-lg shadow-gray-200" : "text-gray-500 hover:text-gray-700"}`}
           >
             <FileText className="h-4 w-4" />
             Documents
@@ -374,7 +374,7 @@ export function RestaurantDetail() {
             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
               {/* Platform Stats Row */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <Card className="!bg-[#FF6B35] !border-none !shadow-2xl shadow-orange-200 relative overflow-hidden group">
+                <Card className="!bg-[#E4983A] !border-none !shadow-2xl shadow-orange-200 relative overflow-hidden group">
                   <BarChart3 className="absolute -right-2 -bottom-2 h-24 w-24 text-white/10 transition-transform group-hover:scale-110" />
                   <p className="text-white text-xs font-black uppercase tracking-widest relative z-10">
                     Total Sales
@@ -396,7 +396,7 @@ export function RestaurantDetail() {
                       {restaurant.stats.totalOrders}
                     </p>
                   </div>
-                  <p className="text-[10px] text-[#FF6B35] font-black mt-4 flex items-center gap-1 uppercase tracking-tighter">
+                  <p className="text-[10px] text-[#E4983A] font-black mt-4 flex items-center gap-1 uppercase tracking-tighter">
                     Platform Fee: {restaurant.platformFee}
                   </p>
                 </Card>
@@ -427,7 +427,7 @@ export function RestaurantDetail() {
                   >
                     <div className="p-6 border-b border-gray-50 bg-gray-50/50">
                       <h3 className="font-black text-gray-900 flex items-center gap-2">
-                        <Info className="h-4 w-4 text-[#FF6B35]" /> Platform
+                        <Info className="h-4 w-4 text-[#E4983A]" /> Platform
                         Profile
                       </h3>
                     </div>
@@ -460,7 +460,7 @@ export function RestaurantDetail() {
                             </span>
                             <a
                               href="#"
-                              className="font-bold text-[#FF6B35] flex items-center gap-1 hover:underline"
+                              className="font-bold text-[#E4983A] flex items-center gap-1 hover:underline"
                             >
                               Visit <ExternalLink className="h-3 w-3" />
                             </a>
@@ -518,7 +518,7 @@ export function RestaurantDetail() {
                   >
                     <div className="p-6 border-b border-gray-50 bg-gray-50/50 flex justify-between items-center">
                       <h3 className="font-black text-gray-900 flex items-center gap-2">
-                        <Clock className="h-4 w-4 text-[#FF6B35]" /> Pickup
+                        <Clock className="h-4 w-4 text-[#E4983A]" /> Pickup
                         Windows
                       </h3>
                     </div>
@@ -534,7 +534,7 @@ export function RestaurantDetail() {
                           >
                             <div className="flex items-center gap-3">
                               <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center border border-gray-100">
-                                <History className="h-4 w-4 text-[#FF6B35]" />
+                                <History className="h-4 w-4 text-[#E4983A]" />
                               </div>
                               <span className="text-xs font-black text-gray-700 uppercase">
                                 {slot.day}
@@ -689,13 +689,13 @@ export function RestaurantDetail() {
                   <div className="flex gap-2 p-1 bg-gray-50 rounded-xl border border-gray-100">
                     <button
                       onClick={() => setItemsViewMode("grid")}
-                      className={`p-2 rounded-lg transition-all ${itemsViewMode === "grid" ? "bg-white text-[#FF6B35] shadow-sm" : "text-gray-400 hover:text-gray-600"}`}
+                      className={`p-2 rounded-lg transition-all ${itemsViewMode === "grid" ? "bg-white text-[#E4983A] shadow-sm" : "text-gray-400 hover:text-gray-600"}`}
                     >
                       <LayoutGrid className="h-5 w-5" />
                     </button>
                     <button
                       onClick={() => setItemsViewMode("list")}
-                      className={`p-2 rounded-lg transition-all ${itemsViewMode === "list" ? "bg-white text-[#FF6B35] shadow-sm" : "text-gray-400 hover:text-gray-600"}`}
+                      className={`p-2 rounded-lg transition-all ${itemsViewMode === "list" ? "bg-white text-[#E4983A] shadow-sm" : "text-gray-400 hover:text-gray-600"}`}
                     >
                       <ListIcon className="h-5 w-5" />
                     </button>
@@ -723,7 +723,7 @@ export function RestaurantDetail() {
                       ),
                   ).map(([category, items]) => (
                     <div key={category} className="space-y-4">
-                      <h4 className="text-lg font-black text-gray-900 border-l-4 border-[#FF6B35] pl-3 uppercase tracking-wider">
+                      <h4 className="text-lg font-black text-gray-900 border-l-4 border-[#E4983A] pl-3 uppercase tracking-wider">
                         {category}
                       </h4>
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -756,7 +756,7 @@ export function RestaurantDetail() {
                               </div>
                               <button
                                 onClick={() => handleEditClick(item)}
-                                className="absolute bottom-4 right-4 p-3 bg-white text-[#FF6B35] rounded-2xl shadow-xl transform translate-y-12 group-hover:translate-y-0 transition-transform duration-500 hover:bg-[#FF6B35] hover:text-white"
+                                className="absolute bottom-4 right-4 p-3 bg-white text-[#E4983A] rounded-2xl shadow-xl transform translate-y-12 group-hover:translate-y-0 transition-transform duration-500 hover:bg-[#E4983A] hover:text-white"
                               >
                                 <Edit2 className="h-5 w-5" />
                               </button>
@@ -766,7 +766,7 @@ export function RestaurantDetail() {
                                 <h4 className="font-black text-gray-900 text-lg">
                                   {item.title}
                                 </h4>
-                                <span className="font-black text-[#FF6B35] text-xl">
+                                <span className="font-black text-[#E4983A] text-xl">
                                   {item.price}
                                 </span>
                               </div>
@@ -833,7 +833,7 @@ export function RestaurantDetail() {
                       {
                         header: "Price",
                         accessorKey: "price",
-                        className: "text-[#FF6B35] font-black text-lg",
+                        className: "text-[#E4983A] font-black text-lg",
                       },
                       {
                         header: "Stock",
@@ -952,7 +952,7 @@ export function RestaurantDetail() {
                           variant="ghost"
                           size="sm"
                           onClick={() => navigate(`/orders/${item.id}`)}
-                          className="font-bold text-[#FF6B35]"
+                          className="font-bold text-[#E4983A]"
                         >
                           View Details
                         </Button>
@@ -974,7 +974,7 @@ export function RestaurantDetail() {
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-6">
               <Card noPadding className="overflow-hidden border-none shadow-xl shadow-gray-100/50">
                 <div className="p-6 border-b border-gray-50 flex items-center gap-3">
-                  <div className="p-2 bg-orange-50 text-[#FF6B35] rounded-lg">
+                  <div className="p-2 bg-orange-50 text-[#E4983A] rounded-lg">
                     <FileText className="h-5 w-5" />
                   </div>
                   <h3 className="font-black text-gray-900">Compliance Documents</h3>
@@ -1022,7 +1022,7 @@ export function RestaurantDetail() {
                                 setSelectedDocument(item);
                                 setIsDocumentModalOpen(true);
                               }}
-                              className="text-sm font-bold text-gray-400 hover:text-[#FF6B35] transition-colors"
+                              className="text-sm font-bold text-gray-400 hover:text-[#E4983A] transition-colors"
                             >
                               View
                             </button>
@@ -1088,7 +1088,7 @@ export function RestaurantDetail() {
                     description: e.target.value,
                   })
                 }
-                className="w-full min-h-[100px] border-2 border-gray-100 rounded-2xl px-4 py-3 focus:ring-2 focus:ring-[#FF6B35]/20 focus:border-[#FF6B35] outline-none transition-all resize-y text-gray-700 font-medium"
+                className="w-full min-h-[100px] border-2 border-gray-100 rounded-2xl px-4 py-3 focus:ring-2 focus:ring-[#E4983A]/20 focus:border-[#E4983A] outline-none transition-all resize-y text-gray-700 font-medium"
                 placeholder="Describe your item..."
               />
             </div>
@@ -1188,7 +1188,7 @@ export function RestaurantDetail() {
               </button>
               <button
                 onClick={() => selectedDocument?.fileUrl && window.open(selectedDocument.fileUrl)}
-                className="flex items-center gap-2 px-6 py-2.5 bg-[#FF6B35] text-white rounded-xl text-sm font-bold shadow-lg shadow-orange-100 hover:bg-[#E85A2D] transition-all"
+                className="flex items-center gap-2 px-6 py-2.5 bg-[#E4983A] text-white rounded-xl text-sm font-bold shadow-lg shadow-orange-100 hover:bg-[#E85A2D] transition-all"
               >
                 <Download className="h-4 w-4" />
                 Download
@@ -1201,7 +1201,7 @@ export function RestaurantDetail() {
           <div className="bg-white rounded-[2rem] border border-gray-100 p-2 shadow-inner mb-8">
             <div className="w-full aspect-[21/9] bg-gray-50/50 rounded-[1.8rem] flex flex-col items-center justify-center border border-gray-50 relative overflow-hidden group">
               <div className="flex items-center gap-3 px-6 py-3 bg-white rounded-2xl shadow-sm border border-gray-100 relative z-10">
-                <div className="p-2 bg-orange-50 text-[#FF6B35] rounded-lg">
+                <div className="p-2 bg-orange-50 text-[#E4983A] rounded-lg">
                   <FileText className="h-5 w-5" />
                 </div>
                 <span className="text-sm font-bold text-gray-700">
