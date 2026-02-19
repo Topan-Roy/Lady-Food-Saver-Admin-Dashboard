@@ -56,6 +56,14 @@ export const settingApi = baseApi.injectEndpoints({
             }),
             invalidatesTags: ["paymentMethods"],
         }),
+        updateUserDistribution: builder.mutation({
+            query: (value) => ({
+                url: "/api/v1/admin/config/restaurant-dashboard-permissions",
+                method: "PATCH",
+                body: { showUserDistributionByCity: value },
+            }),
+            invalidatesTags: ["Config"],
+        }),
     }),
 });
 
@@ -67,5 +75,6 @@ export const {
     useGetPaymentMethodsQuery,
     useAddPaymentMethodMutation,
     useUpdatePaymentMethodMutation,
-    useDeletePaymentMethodMutation
+    useDeletePaymentMethodMutation,
+    useUpdateUserDistributionMutation
 } = settingApi;

@@ -6,7 +6,7 @@ import { Input } from '../components/ui/Input';
 import { Modal } from '../components/ui/Modal';
 import { Bell, CreditCard, Trash2, Edit2, Plus, Image as ImageIcon, BarChart3 } from 'lucide-react';
 import { getAppLogo, setAppLogo, resetAppLogo } from '../utils/logo';
-import { useGetPublicConfigQuery, useUpdateLogoMutation, useGetPlatformFeeQuery, useUpdatePlatformFeeMutation, useGetPaymentMethodsQuery, useAddPaymentMethodMutation, useUpdatePaymentMethodMutation, useDeletePaymentMethodMutation } from '../redux/features/setting';
+import { useGetPublicConfigQuery, useUpdateLogoMutation, useGetPlatformFeeQuery, useUpdatePlatformFeeMutation, useGetPaymentMethodsQuery, useAddPaymentMethodMutation, useUpdatePaymentMethodMutation, useDeletePaymentMethodMutation, useUpdateUserDistributionMutation } from '../redux/features/setting';
 import { useSelector } from 'react-redux';
 
 export function Settings() {
@@ -28,6 +28,7 @@ export function Settings() {
 
   const { data: configData } = useGetPublicConfigQuery({});
   const [updateLogo, { isLoading: isUpdatingLogo }] = useUpdateLogoMutation();
+  const [updateUserDistribution, { isLoading: isUpdatingDistribution }] = useUpdateUserDistributionMutation();
 
   const { data: feeData } = useGetPlatformFeeQuery({});
   const [updatePlatformFee, { isLoading: isUpdatingFee }] = useUpdatePlatformFeeMutation();
@@ -43,6 +44,11 @@ export function Settings() {
     if (configData?.data?.app_logo) {
       setCurrentLogo(configData.data.app_logo);
       setAppLogo(configData.data.app_logo);
+    }
+    // Handle the nested structure for permissions
+    const permissions = configData?.data?.restaurant_dashboard_permissions;
+    if (permissions?.showUserDistributionByCity !== undefined) {
+      setShowUserDistribution(permissions.showUserDistributionByCity);
     }
   }, [configData]);
 
@@ -119,10 +125,15 @@ export function Settings() {
     }
   };
 
-  const handleToggleUserDistribution = () => {
+  const handleToggleUserDistribution = async () => {
     const newValue = !showUserDistribution;
-    setShowUserDistribution(newValue);
-    localStorage.setItem('show_user_distribution', String(newValue));
+    try {
+      await updateUserDistribution(newValue).unwrap();
+      setShowUserDistribution(newValue);
+      localStorage.setItem('show_user_distribution', String(newValue));
+    } catch (err: any) {
+      alert(err?.data?.message || 'Failed to update user distribution permission');
+    }
   };
 
   const handleOpenModal = (method?: any) => {
@@ -427,8 +438,9 @@ export function Settings() {
             </div>
             <button
               onClick={handleToggleUserDistribution}
+              disabled={isUpdatingDistribution}
               className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 outline-none focus:ring-2 focus:ring-[#E4983A] focus:ring-offset-2 ${showUserDistribution ? 'bg-[#E4983A]' : 'bg-gray-200'
-                }`}
+                } ${isUpdatingDistribution ? 'opacity-50 ' : ''}`}
             >
               <span
                 className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-200 ${showUserDistribution ? 'translate-x-6' : 'translate-x-1'
