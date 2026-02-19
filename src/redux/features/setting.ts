@@ -5,7 +5,7 @@ export const settingApi = baseApi.injectEndpoints({
         updateLogo: builder.mutation({
             query: (data) => ({
                 url: "/api/v1/admin/config/logo",
-                method: "POST",
+                method: "PATCH",
                 body: data,
             }),
             invalidatesTags: ["Config"],
@@ -26,7 +26,46 @@ export const settingApi = baseApi.injectEndpoints({
             }),
             invalidatesTags: ["Config"],
         }),
+        getPaymentMethods: builder.query({
+            query: (params) => ({
+                url: "/api/v1/admin/payment-methods",
+                params,
+            }),
+            providesTags: ["paymentMethods"],
+        }),
+        addPaymentMethod: builder.mutation({
+            query: (data) => ({
+                url: "/api/v1/admin/payment-methods",
+                method: "POST",
+                body: data,
+            }),
+            invalidatesTags: ["paymentMethods"],
+        }),
+        updatePaymentMethod: builder.mutation({
+            query: ({ id, ...data }) => ({
+                url: `/api/v1/admin/payment-methods/${id}`,
+                method: "PATCH",
+                body: data,
+            }),
+            invalidatesTags: ["paymentMethods"],
+        }),
+        deletePaymentMethod: builder.mutation({
+            query: (id) => ({
+                url: `/api/v1/admin/payment-methods/${id}`,
+                method: "DELETE",
+            }),
+            invalidatesTags: ["paymentMethods"],
+        }),
     }),
 });
 
-export const { useUpdateLogoMutation, useGetPublicConfigQuery, useGetPlatformFeeQuery, useUpdatePlatformFeeMutation } = settingApi;
+export const {
+    useUpdateLogoMutation,
+    useGetPublicConfigQuery,
+    useGetPlatformFeeQuery,
+    useUpdatePlatformFeeMutation,
+    useGetPaymentMethodsQuery,
+    useAddPaymentMethodMutation,
+    useUpdatePaymentMethodMutation,
+    useDeletePaymentMethodMutation
+} = settingApi;

@@ -6,15 +6,20 @@ import { Input } from '../components/ui/Input';
 import { Modal } from '../components/ui/Modal';
 import { Bell, CreditCard, Trash2, Edit2, Plus, Image as ImageIcon, BarChart3 } from 'lucide-react';
 import { getAppLogo, setAppLogo, resetAppLogo } from '../utils/logo';
-import { useGetPublicConfigQuery, useUpdateLogoMutation, useGetPlatformFeeQuery, useUpdatePlatformFeeMutation } from '../redux/features/setting';
+import { useGetPublicConfigQuery, useUpdateLogoMutation, useGetPlatformFeeQuery, useUpdatePlatformFeeMutation, useGetPaymentMethodsQuery, useAddPaymentMethodMutation, useUpdatePaymentMethodMutation, useDeletePaymentMethodMutation } from '../redux/features/setting';
+import { useSelector } from 'react-redux';
 
 export function Settings() {
-  const [paymentMethods, setPaymentMethods] = useState([
-    { id: 1, type: 'VISA', last4: '4242', expiry: '12/24', isDefault: true },
-  ]);
+  const { user } = useSelector((state: any) => state.auth);
+  const { data: methodsResponse, isLoading: isMethodsLoading } = useGetPaymentMethodsQuery({});
+  const [addPaymentMethod, { isLoading: isAddingMethod }] = useAddPaymentMethodMutation();
+  const [updatePaymentMethod, { isLoading: isUpdatingMethod }] = useUpdatePaymentMethodMutation();
+  const [deletePaymentMethod, { isLoading: isDeletingMethod }] = useDeletePaymentMethodMutation();
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingMethod, setEditingMethod] = useState<any>(null);
   const [formData, setFormData] = useState({
+    cardholderName: '',
     type: 'VISA',
     last4: '',
     expiry: '',
@@ -102,19 +107,14 @@ export function Settings() {
   const handleResetLogo = async () => {
     if (window.confirm('Reset logo to default?')) {
       try {
-        // Here we might have a specific reset endpoint, but based on the user request
-        // we only have updateLogo. We'll set it to the default one if we have it,
-        // or just let the resetAppLogo (local) handle it for now if that's what's intended.
-        // However, usually "Reset to Default" should probably call the API with a default URL
-        // or a specific reset endpoint. 
-        // For now, I'll just clear the local one and call reset if there's an endpoint.
-        // Given the request didn't specify a reset endpoint, I'll stick to the local reset for now
-        // but update the remote one to null/default if possible.
+        const defaultLogo = '/logo.png';
+        await updateLogo({ logoUrl: defaultLogo }).unwrap();
 
         resetAppLogo();
-        setCurrentLogo(getAppLogo());
+        setCurrentLogo(defaultLogo);
+        alert('Logo reset successfully');
       } catch (err: any) {
-        alert('Failed to reset logo');
+        alert(err?.data?.message || 'Failed to reset logo');
       }
     }
   };
@@ -129,14 +129,16 @@ export function Settings() {
     if (method) {
       setEditingMethod(method);
       setFormData({
-        type: method.type,
+        cardholderName: method.cardholderName || '',
+        type: method.brand?.toUpperCase() || 'VISA',
         last4: method.last4,
-        expiry: method.expiry,
+        expiry: method.expiryDate,
         isDefault: method.isDefault
       });
     } else {
       setEditingMethod(null);
       setFormData({
+        cardholderName: '',
         type: 'VISA',
         last4: '',
         expiry: '',
@@ -146,35 +148,45 @@ export function Settings() {
     setIsModalOpen(true);
   };
 
-  const handleSave = () => {
-    if (!formData.last4 || !formData.expiry) {
+  const handleSave = async () => {
+    if (!formData.cardholderName || !formData.last4 || !formData.expiry) {
       alert('Please fill in all fields');
       return;
     }
 
-    if (editingMethod) {
-      setPaymentMethods(paymentMethods.map(m =>
-        m.id === editingMethod.id ? { ...m, ...formData } : m
-      ));
-    } else {
-      const newMethod = {
-        id: Date.now(),
-        ...formData
-      };
-      setPaymentMethods([...paymentMethods, newMethod]);
+    try {
+      if (editingMethod) {
+        await updatePaymentMethod({
+          id: editingMethod._id,
+          cardholderName: formData.cardholderName,
+          expiryDate: formData.expiry
+        }).unwrap();
+        alert('Payment method updated successfully');
+      } else {
+        await addPaymentMethod({
+          userId: user?.id || user?._id,
+          cardholderName: formData.cardholderName,
+          brand: formData.type.charAt(0).toUpperCase() + formData.type.slice(1).toLowerCase(),
+          last4: formData.last4,
+          expiryDate: formData.expiry,
+          isDefault: formData.isDefault
+        }).unwrap();
+        alert('Payment method added successfully');
+      }
+      setIsModalOpen(false);
+    } catch (err: any) {
+      alert(err?.data?.message || 'Failed to save payment method');
     }
-
-    if (formData.isDefault) {
-      // Logic to make others not default if needed, 
-      // but for simplicity we just set this one.
-    }
-
-    setIsModalOpen(false);
   };
 
-  const handleDelete = (id: number) => {
+  const handleDelete = async (id: string) => {
     if (window.confirm('Are you sure you want to delete this payment method?')) {
-      setPaymentMethods(paymentMethods.filter(m => m.id !== id));
+      try {
+        await deletePaymentMethod(id).unwrap();
+        alert('Payment method deleted successfully');
+      } catch (err: any) {
+        alert(err?.data?.message || 'Failed to delete payment method');
+      }
     }
   };
 
@@ -272,17 +284,19 @@ export function Settings() {
           </div>
         </div>
         <div className="space-y-4">
-          {paymentMethods.map(method => (
-            <div key={method.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100 group hover:border-[#E4983A]/30 transition-all">
+          {isMethodsLoading ? (
+            <div className="text-center py-4">Loading payment methods...</div>
+          ) : (methodsResponse?.data?.methods || []).map((method: any) => (
+            <div key={method._id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100 group hover:border-[#E4983A]/30 transition-all">
               <div className="flex items-center gap-4">
                 <div className="h-10 w-16 bg-white rounded-lg border border-gray-200 flex items-center justify-center shadow-sm">
-                  <span className={`font-black text-xs italic ${method.type === 'VISA' ? 'text-blue-800' : 'text-red-600'}`}>
-                    {method.type}
+                  <span className={`font-black text-xs italic ${method.brand?.toUpperCase() === 'VISA' ? 'text-blue-800' : 'text-red-600'}`}>
+                    {method.brand?.toUpperCase()}
                   </span>
                 </div>
                 <div>
-                  <p className="font-bold text-gray-900">{method.type} ending in {method.last4}</p>
-                  <p className="text-xs text-gray-500">Expires {method.expiry} {method.isDefault && '• Default'}</p>
+                  <p className="font-bold text-gray-900">{method.brand} ending in {method.last4}</p>
+                  <p className="text-xs text-gray-500">Expires {method.expiryDate} {method.isDefault && '• Default'}</p>
                 </div>
               </div>
               <div className="flex gap-2">
@@ -298,7 +312,8 @@ export function Settings() {
                   variant="ghost"
                   size="sm"
                   className="text-gray-400 hover:text-red-500 bg-white shadow-sm"
-                  onClick={() => handleDelete(method.id)}
+                  onClick={() => handleDelete(method._id)}
+                  disabled={isDeletingMethod}
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
@@ -321,13 +336,30 @@ export function Settings() {
           title={editingMethod ? "Edit Payment Method" : "Add Payment Method"}
         >
           <div className="space-y-4">
+            {!editingMethod && (
+              <Input
+                label="Cardholder Name"
+                placeholder="John Doe"
+                value={formData.cardholderName}
+                onChange={(e) => setFormData({ ...formData, cardholderName: e.target.value })}
+              />
+            )}
+            {editingMethod && (
+              <Input
+                label="Cardholder Name"
+                placeholder="John Doe"
+                value={formData.cardholderName}
+                onChange={(e) => setFormData({ ...formData, cardholderName: e.target.value })}
+              />
+            )}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <label className="text-sm font-bold text-gray-700">Card Type</label>
                 <select
-                  className="w-full h-11 px-4 bg-gray-50 border-2 border-gray-100 rounded-xl focus:border-[#E4983A] outline-none transition-all font-medium"
+                  className="w-full h-11 px-4 bg-gray-50 border-2 border-gray-100 rounded-xl focus:border-[#E4983A] outline-none transition-all font-medium disabled:opacity-50"
                   value={formData.type}
                   onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+                  disabled={!!editingMethod}
                 >
                   <option value="VISA">VISA</option>
                   <option value="MASTERCARD">MASTERCARD</option>
@@ -340,6 +372,7 @@ export function Settings() {
                 maxLength={4}
                 value={formData.last4}
                 onChange={(e) => setFormData({ ...formData, last4: e.target.value.replace(/\D/g, '') })}
+                disabled={!!editingMethod}
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
@@ -353,9 +386,10 @@ export function Settings() {
                 <label className="flex items-center gap-2 cursor-pointer group">
                   <input
                     type="checkbox"
-                    className="w-5 h-5 rounded border-2 border-gray-200 text-[#E4983A] focus:ring-[#E4983A]"
+                    className="w-5 h-5 rounded border-2 border-gray-200 text-[#E4983A] focus:ring-[#E4983A] disabled:opacity-50"
                     checked={formData.isDefault}
                     onChange={(e) => setFormData({ ...formData, isDefault: e.target.checked })}
+                    disabled={!!editingMethod}
                   />
                   <span className="text-sm font-bold text-gray-600 group-hover:text-gray-900 transition-colors">Set as Default</span>
                 </label>
@@ -363,7 +397,9 @@ export function Settings() {
             </div>
             <div className="pt-6 flex justify-end gap-3">
               <Button variant="secondary" onClick={() => setIsModalOpen(false)}>Cancel</Button>
-              <Button onClick={handleSave}>{editingMethod ? 'Update' : 'Add'} Method</Button>
+              <Button onClick={handleSave} disabled={isAddingMethod || isUpdatingMethod}>
+                {isAddingMethod || isUpdatingMethod ? 'Saving...' : (editingMethod ? 'Update' : 'Add')} Method
+              </Button>
             </div>
           </div>
         </Modal>
