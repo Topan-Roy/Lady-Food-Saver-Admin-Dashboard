@@ -3,18 +3,22 @@ import { useNavigate } from 'react-router-dom';
 import { Search, Bell, Settings, X, CheckCircle, AlertCircle, Info } from 'lucide-react';
 import { Avatar } from '../ui/Avatar';
 import { Input } from '../ui/Input';
+import { useGetProfileQuery } from '../../redux/features/setting';
 
 export function TopBar() {
   const [unreadCount, setUnreadCount] = useState(3);
   const [showNotifications, setShowNotifications] = useState(false);
   const notifRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+  const { data: profileData, isLoading: isProfileLoading } = useGetProfileQuery({});
 
   const notifications = [
     { id: 1, type: 'success', title: 'Order Completed', message: 'Order #ORD-1025 has been delivered', time: '5 min ago' },
     { id: 2, type: 'warning', title: 'Low Stock Alert', message: 'Salmon Sushi Roll is running low', time: '1 hour ago' },
     { id: 3, type: 'info', title: 'New Restaurant', message: 'Sunset Cafe joined the platform', time: '3 hours ago' },
   ];
+
+  const admin = profileData?.data;
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -121,17 +125,34 @@ export function TopBar() {
       <div className="h-8 w-px bg-gray-200 mx-2"></div>
 
       <div
-        className="flex items-center gap-3 cursor-pointer hover:bg-gray-50 p-2 rounded-xl transition-colors"
+        className="flex items-center gap-3 cursor-pointer hover:bg-gray-50 p-2 rounded-xl transition-colors group"
         onClick={() => navigate('/profile')}
       >
-        <div className="text-right hidden md:block">
-          <p className="text-sm font-semibold text-gray-900">
-            Orlando Laurentius
-          </p>
-          <p className="text-xs text-gray-500">Super Admin</p>
-        </div>
-        <Avatar fallback="OL" src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" className="ring-2 ring-white shadow-sm hover:ring-[#E4983A]/20 transition-all" />
+        {isProfileLoading ? (
+          <div className="flex items-center gap-3 animate-pulse">
+            <div className="text-right hidden md:block space-y-2">
+              <div className="h-3 w-24 bg-gray-100 rounded-full"></div>
+              <div className="h-2 w-16 bg-gray-50 rounded-full ml-auto"></div>
+            </div>
+            <div className="w-10 h-10 bg-gray-100 rounded-full"></div>
+          </div>
+        ) : (
+          <>
+            <div className="text-right hidden md:block">
+              <p className="text-sm font-bold text-gray-900 group-hover:text-[#E4983A] transition-colors">
+                {admin?.name || 'Admin'}
+              </p>
+              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{admin?.Role || 'Super Admin'}</p>
+            </div>
+            <Avatar
+              fallback={admin?.name?.substring(0, 2).toUpperCase() || 'AD'}
+              src={admin?.profilePic || admin?.avatar}
+              className="ring-2 ring-white shadow-sm group-hover:ring-[#E4983A]/20 transition-all object-cover"
+            />
+          </>
+        )}
       </div>
     </div>
   </header>;
 }
+

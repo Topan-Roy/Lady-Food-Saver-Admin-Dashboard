@@ -64,6 +64,18 @@ export const settingApi = baseApi.injectEndpoints({
             }),
             invalidatesTags: ["Config"],
         }),
+        getProfile: builder.query({
+            query: () => "/api/v1/profile/me",
+            providesTags: ["Profile"],
+        }),
+        updateProfile: builder.mutation({
+            query: (data) => ({
+                url: "/api/v1/profile/me",
+                method: "PATCH",
+                body: data,
+            }),
+            invalidatesTags: ["Profile"],
+        }),
     }),
 });
 
@@ -76,5 +88,7 @@ export const {
     useAddPaymentMethodMutation,
     useUpdatePaymentMethodMutation,
     useDeletePaymentMethodMutation,
-    useUpdateUserDistributionMutation
+    useUpdateUserDistributionMutation,
+    useGetProfileQuery,
+    useUpdateProfileMutation
 } = settingApi;
