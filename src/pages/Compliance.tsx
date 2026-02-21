@@ -1,38 +1,30 @@
-import { useState } from 'react';
 import { AdminLayout } from '../components/layout/AdminLayout';
 import { Card } from '../components/ui/Card';
 import { Table } from '../components/ui/Table';
 import { Button } from '../components/ui/Button';
 import { ShieldCheck, AlertTriangle } from 'lucide-react';
-
-const initialViolations = [{
-  id: 1,
-  listing: 'Craft Beer Pack',
-  restaurant: 'Downtown Pub',
-  issue: 'Alcohol listing in restricted state',
-  state: 'UT',
-  date: 'Today'
-}, {
-  id: 2,
-  listing: 'Wine Bottle',
-  restaurant: 'Italian Bistro',
-  issue: 'Missing age verification',
-  state: 'NY',
-  date: 'Yesterday'
-}];
+import { useGetViolationsQuery, useTakeViolationActionMutation } from '../redux/features/compliance';
 
 export function Compliance() {
-  const [violations, setViolations] = useState(initialViolations);
+  const { data, isLoading } = useGetViolationsQuery({ page: 1 });
+  const [takeAction] = useTakeViolationActionMutation();
 
-  const handleRemove = (id: number) => {
+  const handleRemove = async (id: string) => {
     if (confirm('Are you sure you want to remove this violation?')) {
-      setViolations(violations.filter(v => v.id !== id));
+      try {
+        await takeAction({ id, action: 'Remove' }).unwrap();
+        alert('Violation removed successfully');
+      } catch (err) {
+        alert('Failed to remove violation');
+      }
     }
   };
 
   const handleWarn = (restaurant: string) => {
     alert(`Warning sent to ${restaurant} regarding compliance violation.`);
   };
+
+  const violations = data?.data?.violations || [];
 
   return <AdminLayout>
     <div className="space-y-8">
@@ -72,34 +64,37 @@ export function Compliance() {
           <AlertTriangle className="h-5 w-5 text-red-500" />
           Detected Violations
         </h3>
-        <Table data={violations} columns={[{
-          header: 'Listing',
-          accessorKey: 'listing',
-          className: 'font-medium'
-        }, {
-          header: 'Restaurant',
-          accessorKey: 'restaurant'
-        }, {
-          header: 'Issue',
-          accessorKey: 'issue',
-          className: 'text-red-600'
-        }, {
-          header: 'State',
-          accessorKey: 'state'
-        }, {
-          header: 'Date',
-          accessorKey: 'date'
-        }, {
-          header: 'Actions',
-          cell: (item) => <div className="flex gap-2">
-            <Button size="sm" variant="danger" onClick={() => handleRemove(item.id)}>
-              Remove
-            </Button>
-            <Button size="sm" variant="secondary" onClick={() => handleWarn(item.restaurant)}>
-              Warn
-            </Button>
-          </div>
-        }]} />
+        <Table
+          data={violations}
+          isLoading={isLoading}
+          columns={[{
+            header: 'Listing',
+            accessorKey: 'Listing',
+            className: 'font-medium'
+          }, {
+            header: 'Restaurant',
+            accessorKey: 'Restaurant'
+          }, {
+            header: 'Issue',
+            accessorKey: 'Issue',
+            className: 'text-red-600'
+          }, {
+            header: 'Status',
+            accessorKey: 'Status'
+          }, {
+            header: 'Date',
+            cell: (item) => new Date(item.Date).toLocaleDateString()
+          }, {
+            header: 'Actions',
+            cell: (item) => <div className="flex gap-2">
+              <Button size="sm" variant="danger" onClick={() => handleRemove(item.id)}>
+                Remove
+              </Button>
+              <Button size="sm" variant="secondary" onClick={() => handleWarn(item.Restaurant)}>
+                Warn
+              </Button>
+            </div>
+          }]} />
       </div>
     </div>
   </AdminLayout>;
