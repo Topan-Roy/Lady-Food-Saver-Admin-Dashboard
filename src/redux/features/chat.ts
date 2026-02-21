@@ -9,12 +9,12 @@ export const chatApi = baseApi.injectEndpoints({
                 method: "POST",
                 body: data,
             }),
-            invalidatesTags: ["RestaurantProfile"],
+            invalidatesTags: ["Chat"],
         }),
         getMessages: builder.query({
             query: ({ conversationId, page = 1, limit = 20 }) =>
                 `/api/v1/chat/conversations/${conversationId}/messages?page=${page}&limit=${limit}`,
-            providesTags: ["RestaurantProfile"],
+            providesTags: ["Chat"],
         }),
         sendMessage: builder.mutation({
             query: (data) => ({
@@ -22,7 +22,7 @@ export const chatApi = baseApi.injectEndpoints({
                 method: "POST",
                 body: data,
             }),
-            invalidatesTags: ["RestaurantProfile"],
+            invalidatesTags: ["Chat"],
         }),
         adminSendMessage: builder.mutation({
             query: (data) => ({
@@ -30,7 +30,7 @@ export const chatApi = baseApi.injectEndpoints({
                 method: "POST",
                 body: data,
             }),
-            invalidatesTags: ["RestaurantProfile"],
+            invalidatesTags: ["Chat"],
         }),
         adminToProvider: builder.mutation({
             query: (data) => ({
@@ -38,11 +38,11 @@ export const chatApi = baseApi.injectEndpoints({
                 method: "POST",
                 body: data,
             }),
-            invalidatesTags: ["RestaurantProfile"],
+            invalidatesTags: ["Chat"],
         }),
         getSupportTickets: builder.query({
             query: () => "/api/v1/support/my-tickets",
-            providesTags: ["RestaurantProfile"],
+            providesTags: ["Chat"],
         }),
     }),
 });

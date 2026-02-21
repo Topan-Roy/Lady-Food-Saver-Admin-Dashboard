@@ -117,7 +117,7 @@ export function SupportChatModal({
             </p>
             <p className="text-xs font-medium text-gray-500 flex items-center gap-2">
               <span className={`h-2 w-2 rounded-full ${ticket.status === 'Open' ? 'bg-red-500' : 'bg-green-500'}`} />
-              {ticket.userType || ticket.type} â€¢ {ticket.status}
+              {ticket.userType || ticket.type} • {ticket.status}
             </p>
           </div>
         </div>

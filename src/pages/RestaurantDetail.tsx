@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from "react";
+﻿import { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { AdminLayout } from "../components/layout/AdminLayout";
 import { Button } from "../components/ui/Button";
@@ -1148,14 +1148,14 @@ export function RestaurantDetail() {
       <SupportChatModal
         isOpen={isChatModalOpen}
         onClose={() => setIsChatModalOpen(false)}
-        ticket={{
+        ticket={useMemo(() => ({
           id: "MSG-" + (id || "001"),
           subject: "Direct Message",
           userName: restaurant.name,
           userId: id,
           userType: "Restaurant",
           status: "Active",
-        }}
+        }), [id, restaurant.name, isChatModalOpen])}
       />
 
       <Modal
