@@ -131,7 +131,7 @@ export const dashboardApi = baseApi.injectEndpoints({
         }),
         getTransactionOrders: builder.query({
             query: ({ providerId, status = 'all_status', page = 1, limit = 20, timeFilter, startDate, endDate }) => {
-                let url = `/api/v1/admin/transactions-orders/${providerId}?page=${page}&limit=${limit}&status=${status}`;
+                let url = `/api/v1/admin/transactions-orders/${providerId ? providerId : ''}?page=${page}&limit=${limit}&status=${status}`;
                 if (timeFilter && timeFilter !== 'all_time' && timeFilter !== 'custom') {
                     url += `&filter=${timeFilter}`;
                 }
@@ -145,7 +145,11 @@ export const dashboardApi = baseApi.injectEndpoints({
             },
             providesTags: ["dashboardStats"],
         }),
+        getOrderDetails: builder.query({
+            query: (orderId) => `/api/v1/admin/orders/${orderId}`,
+            providesTags: (_result, _error, id) => [{ type: "dashboardStats", id }],
+        }),
     }),
 });
 
-export const { useGetDashboardStatsQuery, useGetRevenueStatsQuery, useGetOrderStatsQuery, useGetRecentOrdersQuery, useGetActivitiesQuery, useGetTopRestaurantsQuery, useGetTrendingMenusQuery, useGetRestaurantStatsQuery, useGetRestaurantProfileQuery, useGetRestaurantPickupWindowsQuery, useGetRestaurantActivitySummaryQuery, useGetRestaurantLocationQuery, useGetRestaurantComplianceQuery, useBlockRestaurantMutation, useUnblockRestaurantMutation, useGetRestaurantOrdersQuery, useGetRestaurantReviewsQuery, useGetGlobalReviewsQuery, useGetAllRestaurantsQuery, useApproveRestaurantMutation, useRejectRestaurantMutation, useGetCustomersQuery, useBlockCustomerMutation, useUnblockCustomerMutation, useGetSingleCustomerQuery, useGetCustomerProfileQuery, useGetTransactionOrdersQuery } = dashboardApi;
+export const { useGetDashboardStatsQuery, useGetRevenueStatsQuery, useGetOrderStatsQuery, useGetRecentOrdersQuery, useGetActivitiesQuery, useGetTopRestaurantsQuery, useGetTrendingMenusQuery, useGetRestaurantStatsQuery, useGetRestaurantProfileQuery, useGetRestaurantPickupWindowsQuery, useGetRestaurantActivitySummaryQuery, useGetRestaurantLocationQuery, useGetRestaurantComplianceQuery, useBlockRestaurantMutation, useUnblockRestaurantMutation, useGetRestaurantOrdersQuery, useGetRestaurantReviewsQuery, useGetGlobalReviewsQuery, useGetAllRestaurantsQuery, useApproveRestaurantMutation, useRejectRestaurantMutation, useGetCustomersQuery, useBlockCustomerMutation, useUnblockCustomerMutation, useGetSingleCustomerQuery, useGetCustomerProfileQuery, useGetTransactionOrdersQuery, useGetOrderDetailsQuery } = dashboardApi;

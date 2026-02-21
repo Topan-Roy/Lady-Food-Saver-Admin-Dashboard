@@ -28,7 +28,7 @@ export function OrdersTransactions() {
   const [customDates, setCustomDates] = useState<{ start: Date; end: Date } | undefined>(undefined);
   const [showExportModal, setShowExportModal] = useState(false);
   const [page, setPage] = useState(1);
-  const [selectedProviderId, setSelectedProviderId] = useState('69714abce548ab10b90c0e50');
+  const [selectedProviderId, setSelectedProviderId] = useState('');
 
   // Fetch restaurants to allow selecting which one to view
   const { data: restaurantsData } = useGetAllRestaurantsQuery({ limit: 50 });
