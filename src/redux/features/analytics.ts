@@ -15,7 +15,22 @@ export const analyticsApi = baseApi.injectEndpoints({
             query: (providerId) => `/api/v1/admin/analytics?providerId=${providerId}`,
             providesTags: ["dashboardStats", "RestaurantProfile"],
         }),
+        getDetailedStats: builder.query({
+            query: ({ timeRange, startDate, endDate }) => {
+                let url = `/api/v1/admin/detailed-stats?timeRange=${timeRange}`;
+                if (timeRange === 'custom' && startDate && endDate) {
+                    url += `&startDate=${startDate}&endDate=${endDate}`;
+                }
+                return url;
+            },
+            providesTags: ["dashboardStats"],
+        }),
     }),
 });
 
-export const { useGetCustomerFeedbackQuery, useGetTopPerformingRestaurantsQuery, useGetAnalyticsOverviewQuery } = analyticsApi;
+export const {
+    useGetCustomerFeedbackQuery,
+    useGetTopPerformingRestaurantsQuery,
+    useGetAnalyticsOverviewQuery,
+    useGetDetailedStatsQuery
+} = analyticsApi;

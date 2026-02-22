@@ -9,7 +9,8 @@ import { Table } from '../components/ui/Table';
 import { Leaf, DollarSign, Utensils } from 'lucide-react';
 import { GlobalFilter, FilterRange } from '../components/ui/GlobalFilter';
 
-import { useGetCustomerFeedbackQuery, useGetTopPerformingRestaurantsQuery, useGetAnalyticsOverviewQuery } from '../redux/features/analytics';
+import { format } from 'date-fns';
+import { useGetCustomerFeedbackQuery, useGetTopPerformingRestaurantsQuery, useGetAnalyticsOverviewQuery, useGetDetailedStatsQuery } from '../redux/features/analytics';
 import { useGetOrderStatsQuery } from '../redux/features/dashboardApi';
 
 const mockData = {
@@ -54,6 +55,7 @@ const mockData = {
 
 export function Analytics() {
   const [timeFilter, setTimeFilter] = useState<any>('7d');
+  const [customDates, setCustomDates] = useState<{ start: Date; end: Date } | undefined>();
   const [data, setData] = useState(mockData['7d']);
   const [selectedProviderId] = useState('69714abce548ab10b90c0e50'); // Default ID as requested
   const navigate = useNavigate();
@@ -76,13 +78,50 @@ export function Analytics() {
       '30d': 'month',
       '12m': 'year',
       'year': 'year',
-      'custom': 'year'
+      'custom': 'custom'
     };
     return map[timeFilter] || 'week';
   }, [timeFilter]);
 
+  // Fetch Detailed Stats
+  const { data: detailedStatsResponse } = useGetDetailedStatsQuery({
+    timeRange: apiFilter,
+    startDate: customDates ? format(customDates.start, 'dd-MM-yyyy') : undefined,
+    endDate: customDates ? format(customDates.end, 'dd-MM-yyyy') : undefined
+  });
+
+  // Transform Detailed Stats Data
+  const transformedDetailedData = useMemo(() => {
+    const apiData = detailedStatsResponse?.data;
+    if (!apiData) return {
+      incomeOverview: [],
+      orderVolume: [],
+      activeCustomers: [],
+      stateAnalysis: []
+    };
+
+    return {
+      incomeOverview: apiData.incomeOverview.map((item: any) => ({
+        name: item.label,
+        income: item.income
+      })),
+      orderVolume: apiData.orderVolume.map((item: any) => ({
+        name: item.label,
+        value: item.count
+      })),
+      activeCustomers: apiData.activeCustomers.map((item: any) => ({
+        name: item.label,
+        active: item.count
+      })),
+      stateAnalysis: apiData.stateAnalysis.map((item: any) => ({
+        name: item.state,
+        value: item.count
+      }))
+    };
+  }, [detailedStatsResponse]);
+
   // Fetch Order Stats
-  const { data: ordersResponse, isLoading: isOrdersLoading } = useGetOrderStatsQuery(apiFilter);
+  const { data: ordersResponse, isLoading: isOrdersLoading } = useGetOrderStatsQuery(apiFilter === 'custom' ? 'year' : apiFilter);
 
   // Transform Order Data
   const orderStatsData = useMemo(() => {
@@ -91,6 +130,7 @@ export function Analytics() {
     const { labels, values } = ordersResponse.data;
     return labels.map((label: string, index: number) => ({
       name: label,
+      income: values[index] || 0,
       orders: values[index] || 0
     }));
   }, [ordersResponse, data.sales]);
@@ -148,8 +188,9 @@ export function Analytics() {
             Platform performance and sustainability metrics
           </p>
         </div>
-        <GlobalFilter onFilterChange={(range: FilterRange) => {
+        <GlobalFilter onFilterChange={(range: FilterRange, customDates?: { start: Date; end: Date }) => {
           setTimeFilter(range);
+          if (customDates) setCustomDates(customDates);
         }} />
       </div>
 
@@ -186,13 +227,13 @@ export function Analytics() {
         <div className="h-[400px]">
           <LineChart
             title="Orders Overview"
-            data={orderStatsData}
+            data={transformedDetailedData.incomeOverview.length > 0 ? transformedDetailedData.incomeOverview : orderStatsData}
             height={350}
-            lines={[{ key: 'orders', color: '#E4983A', name: 'Orders' }]}
+            lines={[{ key: 'income', color: '#E4983A', name: 'Income' }]}
           />
         </div>
         <div className="h-[400px]">
-          <BarChart title="State-based Analysis" data={data.states} height={350} />
+          <BarChart title="State-based Analysis" data={transformedDetailedData.stateAnalysis.length > 0 ? transformedDetailedData.stateAnalysis : data.states} height={350} />
         </div>
       </div>
 
@@ -201,14 +242,14 @@ export function Analytics() {
         <div className="h-[400px]">
           <LineChart
             title="Customer Analysis"
-            data={data.userAnalysis}
+            data={transformedDetailedData.activeCustomers.length > 0 ? transformedDetailedData.activeCustomers : data.userAnalysis}
             height={350}
             lines={[{ key: 'active', color: '#E4983A', name: 'Active Customers' }]}
             variant="area"
           />
         </div>
         <div className="h-[400px]">
-          <BarChart title="Orders Overview (Vol)" data={data.transactions} height={350} />
+          <BarChart title="Orders Overview (Vol)" data={transformedDetailedData.orderVolume.length > 0 ? transformedDetailedData.orderVolume : data.transactions} height={350} />
         </div>
       </div>
 
