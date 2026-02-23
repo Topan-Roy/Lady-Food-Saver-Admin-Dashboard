@@ -26,11 +26,19 @@ export const legalApi = baseApi.injectEndpoints({
                 body: {
                     DocumentName: data.DocumentName,
                     Type: data.Type,
-                    Size: data.Siye || data.Size, // Matching user provided response field 'Size'
-                    Siye: data.Siye || data.Size, // Fallback if server expects 'Siye'
+                    Size: data.Siye || data.Size,
+                    Siye: data.Siye || data.Size,
                     fileUrl: data.fileUrl,
                     Status: data.Status
                 }
+            }),
+            invalidatesTags: ["LegalDocuments"],
+        }),
+        updateLegalDocumentStatus: builder.mutation({
+            query: ({ id, Status }) => ({
+                url: `/api/v1/admin/legal/documents/${id}`,
+                method: 'PATCH',
+                body: { Status }
             }),
             invalidatesTags: ["LegalDocuments"],
         }),
@@ -40,5 +48,6 @@ export const legalApi = baseApi.injectEndpoints({
 export const {
     useGetLegalDocumentsQuery,
     useDeleteLegalDocumentMutation,
-    useCreateLegalDocumentMutation
+    useCreateLegalDocumentMutation,
+    useUpdateLegalDocumentStatusMutation
 } = legalApi;

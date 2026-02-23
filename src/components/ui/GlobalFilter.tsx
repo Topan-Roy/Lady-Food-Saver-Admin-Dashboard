@@ -15,11 +15,12 @@ interface GlobalFilterProps {
     label?: string;
     onFilterChange: (range: FilterRange, customDates?: { start: Date; end: Date }) => void;
     className?: string;
+    defaultValue?: FilterRange;
 }
 
-export function GlobalFilter({ label, onFilterChange, className }: GlobalFilterProps) {
+export function GlobalFilter({ label, onFilterChange, className, defaultValue }: GlobalFilterProps) {
     const [isOpen, setIsOpen] = useState(false);
-    const [selectedRange, setSelectedRange] = useState<FilterRange>('week');
+    const [selectedRange, setSelectedRange] = useState<FilterRange>(defaultValue ?? 'week');
     const [showCustomPicker, setShowCustomPicker] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
 

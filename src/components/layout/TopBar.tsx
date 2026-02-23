@@ -1,6 +1,6 @@
 ﻿import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Bell, Settings, X, CheckCircle, AlertCircle, Info } from 'lucide-react';
+import { Search, Bell, Settings, X, CheckCircle, AlertCircle, Info, Store, Users } from 'lucide-react';
 import { Avatar } from '../ui/Avatar';
 import { Input } from '../ui/Input';
 import { useGetProfileQuery } from '../../redux/features/setting';
@@ -10,7 +10,10 @@ import { Inbox } from 'lucide-react';
 
 export function TopBar() {
   const [showNotifications, setShowNotifications] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showSearchDrop, setShowSearchDrop] = useState(false);
   const notifRef = useRef<HTMLDivElement>(null);
+  const searchRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const { data: profileData, isLoading: isProfileLoading } = useGetProfileQuery({});
   const { data: notificationsData } = useGetNotificationsQuery({ limit: 5 });
@@ -26,10 +29,30 @@ export function TopBar() {
       if (notifRef.current && !notifRef.current.contains(event.target as Node)) {
         setShowNotifications(false);
       }
+      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+        setShowSearchDrop(false);
+      }
     }
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  const handleSearchNavigate = (tab: 'restaurants' | 'customers') => {
+    const q = searchQuery.trim();
+    setShowSearchDrop(false);
+    setSearchQuery('');
+    navigate(`/users?tab=${tab}${q ? `&search=${encodeURIComponent(q)}` : ''}`);
+  };
+
+  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && searchQuery.trim()) {
+      handleSearchNavigate('restaurants');
+    }
+    if (e.key === 'Escape') {
+      setShowSearchDrop(false);
+      setSearchQuery('');
+    }
+  };
 
   const getIcon = (title: string) => {
     const t = title?.toLowerCase() || '';
@@ -48,11 +71,50 @@ export function TopBar() {
 
   return <header className="h-16 bg-white border-b border-gray-100 sticky top-0 z-40 px-8 flex items-center justify-between">
     {/* Search */}
-    <div className="w-96">
+    <div className="w-96 relative" ref={searchRef}>
       <Input
         icon={<Search className="h-4 w-4" />}
-        placeholder="Search anything..."
+        placeholder="Search restaurants or customers..."
+        value={searchQuery}
+        onChange={(e) => {
+          setSearchQuery(e.target.value);
+          setShowSearchDrop(e.target.value.trim().length > 0);
+        }}
+        onKeyDown={handleSearchKeyDown}
+        onFocus={() => searchQuery.trim() && setShowSearchDrop(true)}
       />
+      {showSearchDrop && (
+        <div className="absolute top-full mt-2 left-0 w-full bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.12)] border border-gray-100 z-[100] overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+          <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 px-4 pt-3 pb-1">Search in</p>
+          <button
+            onClick={() => handleSearchNavigate('restaurants')}
+            className="w-full flex items-center gap-3 px-4 py-3 hover:bg-orange-50 transition-colors text-left group"
+          >
+            <div className="p-1.5 bg-orange-100 rounded-lg group-hover:bg-[#E4983A] transition-colors">
+              <Store className="h-4 w-4 text-[#E4983A] group-hover:text-white transition-colors" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-gray-800">Restaurants</p>
+              <p className="text-xs text-gray-400">Search by name or owner</p>
+            </div>
+          </button>
+          <button
+            onClick={() => handleSearchNavigate('customers')}
+            className="w-full flex items-center gap-3 px-4 py-3 hover:bg-orange-50 transition-colors text-left group border-t border-gray-50"
+          >
+            <div className="p-1.5 bg-orange-100 rounded-lg group-hover:bg-[#E4983A] transition-colors">
+              <Users className="h-4 w-4 text-[#E4983A] group-hover:text-white transition-colors" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-gray-800">Customers</p>
+              <p className="text-xs text-gray-400">Search by name or email</p>
+            </div>
+          </button>
+          <div className="px-4 py-2 bg-gray-50 border-t border-gray-100">
+            <p className="text-[10px] text-gray-400">Press <kbd className="bg-white border border-gray-200 rounded px-1 py-0.5 text-[10px] font-mono">Enter</kbd> to search restaurants</p>
+          </div>
+        </div>
+      )}
     </div>
 
     {/* Right Actions */}

@@ -1,18 +1,21 @@
 ﻿import { useState, useMemo, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { AdminLayout } from '../components/layout/AdminLayout';
 import { Table } from '../components/ui/Table';
 import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Avatar } from '../components/ui/Avatar';
-import { Search, Star, MapPin, ShieldAlert } from 'lucide-react';
+import { Search, Star, MapPin, ShieldAlert, SearchX } from 'lucide-react';
 import { FilterSelect } from '../components/ui/FilterSelect';
 import { useGetAllRestaurantsQuery, useApproveRestaurantMutation, useRejectRestaurantMutation, useBlockRestaurantMutation, useUnblockRestaurantMutation, useGetCustomersQuery, useBlockCustomerMutation, useUnblockCustomerMutation } from '../redux/features/dashboardApi';
 
 export function UserManagement() {
-  const [activeTab, setActiveTab] = useState<'restaurants' | 'customers'>('restaurants');
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState<'restaurants' | 'customers'>(
+    (searchParams.get('tab') as 'restaurants' | 'customers') || 'restaurants'
+  );
+  const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '');
   const [stateFilter, setStateFilter] = useState('all_states');
   const [statusFilter, setStatusFilter] = useState('all_status');
   const [ratingFilter, setRatingFilter] = useState('all_ratings');
@@ -133,13 +136,24 @@ export function UserManagement() {
     }));
   }, [customersDataAPI]);
 
+  const stateOptions = useMemo(() => {
+    const unique = Array.from(
+      new Set(restaurantData.map((r: any) => r.state).filter((s: string) => s && s !== 'N/A'))
+    );
+    return [
+      { label: 'All States', value: 'all_states' },
+      ...unique.map((s: any) => ({ label: s, value: s }))
+    ];
+  }, [restaurantData]);
+
   const filteredRestaurants = useMemo(() => {
     return restaurantData.filter((r: any) => {
-      const matchesSearch = r.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        r.owner.toLowerCase().includes(searchTerm.toLowerCase());
-      return matchesSearch;
+      const matchesSearch = (r.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (r.owner || '').toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesState = stateFilter === 'all_states' || r.state === stateFilter;
+      return matchesSearch && matchesState;
     });
-  }, [restaurantData, searchTerm]);
+  }, [restaurantData, searchTerm, stateFilter]);
 
   const filteredCustomers = useMemo(() => {
     return customerData.filter((c: any) => {
@@ -196,10 +210,7 @@ export function UserManagement() {
                   icon={MapPin}
                   value={stateFilter}
                   onChange={setStateFilter}
-                  options={[
-                    { label: 'All States', value: 'all_states' },
-                    { label: 'Pending', value: 'Pending' },
-                  ]}
+                  options={stateOptions}
                 />
 
                 <FilterSelect
@@ -243,6 +254,21 @@ export function UserManagement() {
           isRestaurantsLoading ? (
             <div className="flex items-center justify-center h-64 bg-white rounded-3xl border border-gray-100 shadow-sm animate-pulse text-gray-400 font-medium">
               Loading restaurants...
+            </div>
+          ) : filteredRestaurants.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-64 bg-white rounded-3xl border border-gray-100 shadow-sm gap-3">
+              <div className="p-4 bg-orange-50 rounded-2xl">
+                <SearchX className="h-8 w-8 text-[#E4983A]" />
+              </div>
+              <p className="font-bold text-gray-800">No restaurants found</p>
+              <p className="text-sm text-gray-400">
+                {searchTerm ? `No results for "${searchTerm}"` : 'No restaurants available'}
+              </p>
+              {searchTerm && (
+                <button onClick={() => setSearchTerm('')} className="text-sm font-semibold text-[#E4983A] hover:underline">
+                  Clear search
+                </button>
+              )}
             </div>
           ) : (
             <Table
@@ -308,6 +334,21 @@ export function UserManagement() {
         ) : isCustomersLoading ? (
           <div className="flex items-center justify-center h-64 bg-white rounded-3xl border border-gray-100 shadow-sm animate-pulse text-gray-400 font-medium">
             Loading customers...
+          </div>
+        ) : filteredCustomers.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-64 bg-white rounded-3xl border border-gray-100 shadow-sm gap-3">
+            <div className="p-4 bg-orange-50 rounded-2xl">
+              <SearchX className="h-8 w-8 text-[#E4983A]" />
+            </div>
+            <p className="font-bold text-gray-800">No customers found</p>
+            <p className="text-sm text-gray-400">
+              {searchTerm ? `No results for "${searchTerm}"` : 'No customers available'}
+            </p>
+            {searchTerm && (
+              <button onClick={() => setSearchTerm('')} className="text-sm font-semibold text-[#E4983A] hover:underline">
+                Clear search
+              </button>
+            )}
           </div>
         ) : (
           <Table

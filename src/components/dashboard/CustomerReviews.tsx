@@ -4,7 +4,7 @@ import { Card } from '../ui/Card';
 import { Avatar } from '../ui/Avatar';
 import { Star, MessageCircle, Send, CornerDownRight } from 'lucide-react';
 import { Button } from '../ui/Button';
-import { useGetGlobalReviewsQuery, useGetRestaurantReviewsQuery } from '../../redux/features/dashboardApi';
+import { useGetGlobalReviewsQuery, useGetRestaurantReviewsQuery, useReplyToReviewMutation } from '../../redux/features/dashboardApi';
 import { formatDistanceToNow } from 'date-fns';
 
 interface Review {
@@ -31,6 +31,7 @@ export function CustomerReviews({ restaurantId }: CustomerReviewsProps) {
   const navigate = useNavigate();
   const [replyingTo, setReplyingTo] = useState<string | number | null>(null);
   const [replyText, setReplyText] = useState('');
+  const [replyToReview, { isLoading: isReplying }] = useReplyToReviewMutation();
 
   // Fetch reviews based on whether restaurantId is provided
   const { data: globalReviewsData, isLoading: isGlobalLoading } = useGetGlobalReviewsQuery({}, { skip: !!restaurantId });
@@ -39,17 +40,19 @@ export function CustomerReviews({ restaurantId }: CustomerReviewsProps) {
   const rawReviews = restaurantId ? restaurantReviewsData?.data : globalReviewsData?.data;
   const isLoading = restaurantId ? isRestaurantLoading : isGlobalLoading;
 
-  const reviews: Review[] = (rawReviews || []).map((review: any, index: number) => ({
-    id: index,
+  const reviews: Review[] = (rawReviews || []).map((review: any) => ({
+    id: review._id,
     user: review.customerName || 'Anonymous',
-    avatar: review.profilePic || '',
+    avatar: review.customerImage || review.profilePic || '',
     rating: review.rating || 5,
-    comment: review.reviewDetails || '',
+    comment: review.comment || '',
     date: review.createdAt ? formatDistanceToNow(new Date(review.createdAt), { addSuffix: true }) : 'Recent',
-    restaurant: review.restaurantName || (restaurantId ? '' : 'Global'), // Fallback if missing
+    restaurant: review.restaurantName || (restaurantId ? '' : 'Global'),
     restaurantId: review.restaurantId || '',
     images: [],
-    reply: null
+    reply: review.reply
+      ? { text: review.reply.comment, date: formatDistanceToNow(new Date(review.reply.createdAt), { addSuffix: true }) }
+      : null,
   }));
 
   const handleReviewClick = (id: string | number) => {
@@ -60,10 +63,15 @@ export function CustomerReviews({ restaurantId }: CustomerReviewsProps) {
     navigate('/users?tab=restaurants');
   };
 
-  const handleSendReply = (reviewId: string | number) => {
-    console.log("Replying to", reviewId, replyText);
-    setReplyingTo(null);
-    setReplyText('');
+  const handleSendReply = async (reviewId: string | number) => {
+    if (!replyText.trim()) return;
+    try {
+      await replyToReview({ reviewId: String(reviewId), comment: replyText }).unwrap();
+      setReplyingTo(null);
+      setReplyText('');
+    } catch (err) {
+      console.error('Failed to send reply:', err);
+    }
   };
 
   if (isLoading) {
@@ -111,7 +119,7 @@ export function CustomerReviews({ restaurantId }: CustomerReviewsProps) {
         {/* Comment Bubble */}
         <div className="ml-[52px] mb-4">
           <div className="bg-gray-50 rounded-2xl rounded-tl-none p-5 text-gray-700 italic border border-gray-100/50 shadow-sm relative">
-            "{review.comment}"
+            &ldquo;{review.comment}&rdquo;
           </div>
         </div>
 
@@ -150,9 +158,9 @@ export function CustomerReviews({ restaurantId }: CustomerReviewsProps) {
                 />
                 <div className="flex justify-end gap-2 mt-2">
                   <Button variant="ghost" size="sm" onClick={() => setReplyingTo(null)}>Cancel</Button>
-                  <Button size="sm" onClick={() => handleSendReply(review.id)} disabled={!replyText.trim()}>
+                  <Button size="sm" onClick={() => handleSendReply(review.id)} disabled={!replyText.trim() || isReplying}>
                     <Send className="h-3 w-3 mr-1.5" />
-                    Send Reply
+                    {isReplying ? 'Sending...' : 'Send Reply'}
                   </Button>
                 </div>
               </div>

@@ -9,7 +9,7 @@ import { FilterSelect } from '../components/ui/FilterSelect';
 import { GlobalFilter, FilterRange } from '../components/ui/GlobalFilter';
 import { KPICard } from '../components/dashboard/KPICard';
 import { ExportPreviewModal } from '../components/modals/ExportPreviewModal';
-import { FileText, DollarSign, CreditCard, TrendingUp, Search, ChevronLeft, ChevronRight, Calendar } from 'lucide-react';
+import { FileText, DollarSign, CreditCard, TrendingUp, Search, Calendar } from 'lucide-react';
 import { useGetTransactionOrdersQuery, useGetAllRestaurantsQuery } from '../redux/features/dashboardApi';
 
 interface TransactionItem {
@@ -24,8 +24,10 @@ export function OrdersTransactions() {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all_status');
-  const [timeFilter, setTimeFilter] = useState<FilterRange>('week');
-  const [customDates, setCustomDates] = useState<{ start: Date; end: Date } | undefined>(undefined);
+  const [filter, setFilter] = useState<{
+    range: FilterRange;
+    customDates?: { start: Date; end: Date };
+  }>({ range: 'week' });
   const [showExportModal, setShowExportModal] = useState(false);
   const [page, setPage] = useState(1);
   const [selectedProviderId, setSelectedProviderId] = useState('');
@@ -38,9 +40,9 @@ export function OrdersTransactions() {
     status: statusFilter,
     page,
     limit: 20,
-    timeFilter,
-    startDate: customDates?.start?.toISOString(),
-    endDate: customDates?.end?.toISOString(),
+    timeFilter: filter.range,
+    startDate: filter.customDates?.start?.toISOString(),
+    endDate: filter.customDates?.end?.toISOString(),
   });
 
   const summary = transactionsData?.summary || {
@@ -149,9 +151,10 @@ export function OrdersTransactions() {
             />
             <GlobalFilter
               label="Time Range"
+              defaultValue={filter.range}
               onFilterChange={(range, custom) => {
-                setTimeFilter(range);
-                if (custom) setCustomDates(custom);
+                setFilter({ range, customDates: custom });
+                setPage(1);
               }}
             />
           </div>
@@ -162,8 +165,13 @@ export function OrdersTransactions() {
             Loading transactions...
           </div>
         ) : (
-          <>
-            <Table data={filteredOrders} columns={[{
+          <Table
+            data={filteredOrders}
+            currentPage={page}
+            totalPages={pagination.totalPages}
+            totalResults={transactionsData?.pagination?.total || filteredOrders.length}
+            onPageChange={setPage}
+            columns={[{
               header: 'Order ID',
               accessorKey: 'id',
               className: 'font-medium'
@@ -189,35 +197,8 @@ export function OrdersTransactions() {
               cell: (item: TransactionItem) => <Button size="sm" variant="ghost" onClick={() => navigate(`/orders/${item.id}`)}>
                 View
               </Button>
-            }]} />
-
-            {/* Pagination Controls */}
-            <div className="p-4 border-t border-gray-100 flex items-center justify-between">
-              <p className="text-sm text-gray-500">
-                Page {pagination.page} of {pagination.totalPages}
-              </p>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={page <= 1}
-                  onClick={() => setPage(p => Math.max(1, p - 1))}
-                  leftIcon={<ChevronLeft className="h-4 w-4" />}
-                >
-                  Previous
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={page >= pagination.totalPages}
-                  onClick={() => setPage(p => Math.min(pagination.totalPages, p + 1))}
-                  rightIcon={<ChevronRight className="h-4 w-4" />}
-                >
-                  Next
-                </Button>
-              </div>
-            </div>
-          </>
+            }]}
+          />
         )}
       </div>
 

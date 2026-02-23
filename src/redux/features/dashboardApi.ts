@@ -149,7 +149,15 @@ export const dashboardApi = baseApi.injectEndpoints({
             query: (orderId) => `/api/v1/admin/orders/${orderId}`,
             providesTags: (_result, _error, id) => [{ type: "dashboardStats", id }],
         }),
+        replyToReview: builder.mutation({
+            query: ({ reviewId, comment }: { reviewId: string; comment: string }) => ({
+                url: `/api/v1/reviews/${reviewId}/reply`,
+                method: 'POST',
+                body: { comment },
+            }),
+            invalidatesTags: ["dashboardStats"],
+        }),
     }),
 });
 
-export const { useGetDashboardStatsQuery, useGetRevenueStatsQuery, useGetOrderStatsQuery, useGetRecentOrdersQuery, useGetActivitiesQuery, useGetTopRestaurantsQuery, useGetTrendingMenusQuery, useGetRestaurantStatsQuery, useGetRestaurantProfileQuery, useGetRestaurantPickupWindowsQuery, useGetRestaurantActivitySummaryQuery, useGetRestaurantLocationQuery, useGetRestaurantComplianceQuery, useBlockRestaurantMutation, useUnblockRestaurantMutation, useGetRestaurantOrdersQuery, useGetRestaurantReviewsQuery, useGetGlobalReviewsQuery, useGetAllRestaurantsQuery, useApproveRestaurantMutation, useRejectRestaurantMutation, useGetCustomersQuery, useBlockCustomerMutation, useUnblockCustomerMutation, useGetSingleCustomerQuery, useGetCustomerProfileQuery, useGetTransactionOrdersQuery, useGetOrderDetailsQuery } = dashboardApi;
+export const { useGetDashboardStatsQuery, useGetRevenueStatsQuery, useGetOrderStatsQuery, useGetRecentOrdersQuery, useGetActivitiesQuery, useGetTopRestaurantsQuery, useGetTrendingMenusQuery, useGetRestaurantStatsQuery, useGetRestaurantProfileQuery, useGetRestaurantPickupWindowsQuery, useGetRestaurantActivitySummaryQuery, useGetRestaurantLocationQuery, useGetRestaurantComplianceQuery, useBlockRestaurantMutation, useUnblockRestaurantMutation, useGetRestaurantOrdersQuery, useGetRestaurantReviewsQuery, useGetGlobalReviewsQuery, useGetAllRestaurantsQuery, useApproveRestaurantMutation, useRejectRestaurantMutation, useGetCustomersQuery, useBlockCustomerMutation, useUnblockCustomerMutation, useGetSingleCustomerQuery, useGetCustomerProfileQuery, useGetTransactionOrdersQuery, useGetOrderDetailsQuery, useReplyToReviewMutation } = dashboardApi;

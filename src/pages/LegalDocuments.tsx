@@ -3,21 +3,23 @@ import { AdminLayout } from '../components/layout/AdminLayout';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Table } from '../components/ui/Table';
-import { Badge } from '../components/ui/Badge';
 import { Modal } from '../components/ui/Modal';
 import { Input } from '../components/ui/Input';
 import { Upload, FileText, Trash2, Download, AlertCircle, Loader2, Check } from 'lucide-react';
 import {
     useGetLegalDocumentsQuery,
     useDeleteLegalDocumentMutation,
-    useCreateLegalDocumentMutation
+    useCreateLegalDocumentMutation,
+    useUpdateLegalDocumentStatusMutation
 } from '@/redux/features/legal';
 import { format } from 'date-fns';
 
 export function LegalDocuments() {
-    const { data: legalResponse, isLoading, error: fetchError } = useGetLegalDocumentsQuery(undefined);
+    const [currentPage, setCurrentPage] = useState(1);
+    const { data: legalResponse, isLoading, error: fetchError } = useGetLegalDocumentsQuery({ page: currentPage, limit: 10 });
     const [deleteLegalDocument, { isLoading: isDeleting }] = useDeleteLegalDocumentMutation();
     const [createLegalDocument, { isLoading: isCreating }] = useCreateLegalDocumentMutation();
+    const [updateLegalDocumentStatus, { isLoading: isUpdatingStatus }] = useUpdateLegalDocumentStatusMutation();
 
     // Modal States
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -126,6 +128,15 @@ export function LegalDocuments() {
         }
     };
 
+    const handleStatusUpdate = async (id: string, newStatus: string) => {
+        try {
+            await updateLegalDocumentStatus({ id, Status: newStatus }).unwrap();
+        } catch (error) {
+            console.error("Failed to update status:", error);
+            alert("Failed to update status");
+        }
+    };
+
     const handleDownload = (url: string, name: string) => {
         if (!url) {
             alert("Download link is not available");
@@ -163,9 +174,9 @@ export function LegalDocuments() {
                         <h1 className="text-2xl font-bold text-gray-900">Legal Documents</h1>
                         <p className="text-gray-500">Manage company legal documents and policies</p>
                     </div>
-                    <Button leftIcon={<Upload className="h-4 w-4" />} onClick={() => setIsUploadModalOpen(true)}>
+                    {/* <Button leftIcon={<Upload className="h-4 w-4" />} onClick={() => setIsUploadModalOpen(true)}>
                         Upload Document
-                    </Button>
+                    </Button> */}
                 </div>
 
                 {fetchError && (
@@ -277,6 +288,10 @@ export function LegalDocuments() {
                 <Card>
                     <Table
                         data={documents}
+                        currentPage={currentPage}
+                        totalPages={legalResponse?.data?.meta?.totalPages || 1}
+                        totalResults={legalResponse?.data?.meta?.total || 0}
+                        onPageChange={(page) => setCurrentPage(page)}
                         columns={[
                             {
                                 header: 'Document Name',
@@ -295,9 +310,21 @@ export function LegalDocuments() {
                             {
                                 header: 'Status',
                                 cell: (item: any) => (
-                                    <Badge variant={item.status === 'Active' ? 'success' : 'default'}>
-                                        {item.status}
-                                    </Badge>
+                                    <select
+                                        value={item.status}
+                                        onChange={(e) => handleStatusUpdate(item.id, e.target.value)}
+                                        className={`text-xs font-bold px-3 py-1.5 rounded-lg border-2 border-transparent transition-all cursor-pointer hover:border-gray-300 focus:border-[#E4983A] outline-none shadow-sm ${item.status === 'Active'
+                                            ? 'bg-green-50 text-green-700'
+                                            : item.status === 'Draft'
+                                                ? 'bg-orange-50 text-orange-700'
+                                                : 'bg-red-50 text-red-700'
+                                            }`}
+                                        disabled={isUpdatingStatus}
+                                    >
+                                        <option value="Active">Active</option>
+                                        <option value="Draft">Draft</option>
+                                        <option value="Inactive">Inactive</option>
+                                    </select>
                                 )
                             },
                             {
