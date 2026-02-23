@@ -40,6 +40,30 @@ export function Settings() {
   });
   const logoInputRef = useRef<HTMLInputElement>(null);
 
+  const [notificationSettings, setNotificationSettings] = useState(() => {
+    const saved = localStorage.getItem('notification_settings');
+    return saved ? JSON.parse(saved) : {
+      'Email Notifications': true,
+      'Push Notifications': true,
+      'SMS Alerts': false,
+    };
+  });
+
+  const toggleNotification = (key: string) => {
+    setNotificationSettings((prev: any) => {
+      const newValue = !prev[key];
+      const newState = { ...prev, [key]: newValue };
+      localStorage.setItem('notification_settings', JSON.stringify(newState));
+
+      // Show alert for Email and SMS as requested
+      if (key === 'Email Notifications' || key === 'SMS Alerts') {
+        alert(`${key} ${newValue ? 'enabled successfully' : 'disabled successfully'}`);
+      }
+
+      return newState;
+    });
+  };
+
   useEffect(() => {
     if (configData?.data?.app_logo) {
       setCurrentLogo(configData.data.app_logo);
@@ -465,12 +489,19 @@ export function Settings() {
           </div>
         </div>
         <div className="space-y-4">
-          {['Email Notifications', 'Push Notifications', 'SMS Alerts'].map(item => <div key={item} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
-            <span className="text-gray-700 font-medium">{item}</span>
-            <div className="relative inline-block w-12 h-6 transition duration-200 ease-in-out rounded-full cursor-pointer bg-[#E4983A]">
-              <span className="absolute left-6 top-1 bg-white w-4 h-4 rounded-full transition-transform duration-200 ease-in-out shadow-sm"></span>
+          {Object.entries(notificationSettings).map(([item, isActive]) => (
+            <div key={item} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
+              <span className="text-gray-700 font-medium">{item}</span>
+              <button
+                onClick={() => toggleNotification(item)}
+                className={`relative inline-block w-12 h-6 transition-colors duration-300 ease-in-out rounded-full cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#E4983A] focus:ring-offset-2 ${isActive ? 'bg-[#E4983A]' : 'bg-gray-200'
+                  }`}
+              >
+                <span className={`absolute top-1 bg-white w-4 h-4 rounded-full transition-all duration-300 ease-in-out shadow-sm ${isActive ? 'left-7' : 'left-1'
+                  }`}></span>
+              </button>
             </div>
-          </div>)}
+          ))}
         </div>
       </Card>
 
