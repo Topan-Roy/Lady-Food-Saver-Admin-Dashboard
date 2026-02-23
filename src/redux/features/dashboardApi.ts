@@ -34,7 +34,7 @@ export const dashboardApi = baseApi.injectEndpoints({
             query: (restaurantId) => `/admin/dashboard/stats/${restaurantId}`,
         }),
         getRestaurantProfile: builder.query({
-            query: (restaurantId) => `/api/v1/admin/restaurants/${restaurantId}/profile`,
+            query: (restaurantId) => `/api/v1/admin/restaurants/${restaurantId}`,
             providesTags: (_result, _error, id) => [{ type: "RestaurantProfile", id }],
         }),
         getRestaurantPickupWindows: builder.query({
@@ -102,7 +102,7 @@ export const dashboardApi = baseApi.injectEndpoints({
         }),
         getCustomers: builder.query({
             query: ({ page = 1, limit = 10 }) =>
-                `/api/v1/admin/customers/dashboard/customersAll?page=${page}&limit=${limit}`,
+                `/admin/users/customers?status=all_status&page=${page}&limit=${limit}`,
             providesTags: ["admin-users"],
         }),
         blockCustomer: builder.mutation({

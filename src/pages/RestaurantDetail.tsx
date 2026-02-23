@@ -56,13 +56,12 @@ export function RestaurantDetail() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState<
-    "details" | "items" | "orders" | "reviews" | "documents"
+    "details" | "orders" | "reviews" | "documents"
   >((searchParams.get("tab") as any) || "details");
-  const [itemsViewMode, setItemsViewMode] = useState<"grid" | "list">("grid");
-  const [categoryFilter, setCategoryFilter] = useState("all");
   const [localStatus, setLocalStatus] = useState<string | null>(null);
   const [isDocumentModalOpen, setIsDocumentModalOpen] = useState(false);
   const [selectedDocument, setSelectedDocument] = useState<any>(null);
+  const [isChatModalOpen, setIsChatModalOpen] = useState(false);
 
   const { data: statsData } = useGetRestaurantStatsQuery(id);
   const { data: profileDataResponse } = useGetRestaurantProfileQuery(id);
@@ -92,16 +91,16 @@ export function RestaurantDetail() {
 
   const profile = profileDataResponse?.data || profileDataResponse || {};
   const stats = statsData?.data || {
-    totalSales: 0,
-    totalOrders: 0,
-    platformFeePerOrder: 0,
+    totalSales: profile.revenue || profile.totalSales || 0,
+    totalOrders: profile.totalOrders || 0,
+    platformFeePerOrder: profile.platformFeePerOrder || 0,
     nextPayout: { amount: 0, scheduledAt: new Date().toISOString() },
   };
 
   const activitySummary = activityData?.data || {
-    listings: 0,
-    orders: 0,
-    reviews: 0,
+    listings: profile.totalListings || 0,
+    orders: profile.totalOrders || 0,
+    reviews: profile.reviewCount || profile.ratings || 0,
   };
 
   const location = locationData?.data || {
@@ -122,26 +121,29 @@ export function RestaurantDetail() {
 
   const restaurant = {
     id,
-    name: profile.restaurantName || "Joe's Pizza",
-    owner: profile.ownerName || "Joe Smith",
+    name: profile.restaurantsName || profile.restaurantName || profile.RestaurantName || profile.name || profile.Name || profile.storeName || profile.restaurant_name || (profileDataResponse ? "Restaurant Name" : "Loading..."),
+    owner: profile.owner?.name || profile.ownerName || profile.OwnerName || profile.owner || "Owner Name",
     status: localStatus || profile.status || "Approved",
-    rating: profile.rating || 4.8,
-    reviews: profile.reviewCount || 124,
-    address: profile.address || location.address,
-    phone: profile.contact?.phone || profile.phoneNumber || "+1 (212) 555-0199",
-    website: profile.contact?.website || "www.joespizza.com",
+    rating: profile.ratings || profile.rating || profile.Rating || 0,
+    reviews: profile.reviewCount || profile.reviews?.length || profile.ReviewCount || 0,
+    address: profile.address || profile.Address || location.address,
+    phone: profile.contact?.phone || profile.phoneNumber || profile.phone || "+1 (212) 555-0199",
+    website: profile.contact?.website || profile.website || profile.Website || "www.website.com",
     image:
+      profile.owner?.restaurantsPick ||
       profile.image ||
       profile.logo ||
+      profile.profileImage ||
+      profile.ProfilePick ||
       "https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=400",
     cuisine:
       profile.cuisine?.length > 0
-        ? profile.cuisine.join(" & ")
-        : "Italian & American",
+        ? Array.isArray(profile.cuisine) ? profile.cuisine.join(" & ") : profile.cuisine
+        : "N/A",
     statusText: (localStatus || profile.status || "Approved").toString(),
-    joinedDate: profile.createdAt
-      ? format(new Date(profile.createdAt), "MMM dd, yyyy")
-      : "Mar 15, 2023",
+    joinedDate: profile.createdAt || profile.date
+      ? format(new Date(profile.createdAt || profile.date), "MMM dd, yyyy")
+      : "N/A",
     taxRule: compliance.tax.rule || "US-NY Standard (8.875%)",
     platformFee: `$${stats.platformFeePerOrder} per transaction`,
     pickupWindows:
@@ -152,16 +154,22 @@ export function RestaurantDetail() {
           { day: "Fri - Sun", hours: "09:00 PM - 11:00 PM" },
         ],
     stats: {
-      totalSales: `$${(stats.totalSales || 0).toLocaleString()}`,
-      totalOrders: stats.totalOrders || 0,
-      platformRevenue: `$${((stats.totalOrders || 0) * (stats.platformFeePerOrder || 0)).toFixed(2)}`,
-      restaurantEarnings: `$${((stats.totalSales || 0) - (stats.totalOrders || 0) * (stats.platformFeePerOrder || 0)).toLocaleString()}`,
-      nextPayoutAmount: `$${(stats.nextPayout?.amount || 0).toFixed(2)}`,
+      totalSales: `$${Number(stats.totalSales || 0).toLocaleString()}`,
+      totalOrders: Number(stats.totalOrders || 0),
+      platformRevenue: `$${(Number(stats.totalOrders || 0) * Number(stats.platformFeePerOrder || 0)).toFixed(2)}`,
+      restaurantEarnings: `$${(Number(stats.totalSales || 0) - (Number(stats.totalOrders || 0) * Number(stats.platformFeePerOrder || 0))).toLocaleString()}`,
+      nextPayoutAmount: `$${Number(stats.nextPayout?.amount || 0).toFixed(2)}`,
       nextPayoutDate: stats.nextPayout?.scheduledAt
         ? format(new Date(stats.nextPayout.scheduledAt), "MMM dd")
         : "N/A",
     },
   };
+
+  useEffect(() => {
+    if (restaurant.name && restaurant.name !== "Loading...") {
+      document.title = `${restaurant.name} | Admin Dashboard`;
+    }
+  }, [restaurant.name]);
 
   const handleBlockToggle = async () => {
     const currentStatus = String(restaurant.status || "").toLowerCase();
@@ -189,42 +197,6 @@ export function RestaurantDetail() {
       }
     }
   };
-  const [listings, setListings] = useState([
-    {
-      id: 1,
-      title: "Pepperoni Slice Box",
-      description:
-        "Two slices of our famous spicy pepperoni pizza with extra cheese.",
-      price: "$5.99",
-      stock: 5,
-      status: "Approved",
-      category: "Pizza",
-      image:
-        "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400",
-    },
-    {
-      id: 2,
-      title: "Cheese Pizza Whole",
-      description: "A full 18-inch NY style cheese pie, baked fresh.",
-      price: "$5.99",
-      stock: 2,
-      status: "Pending",
-      category: "Pizza",
-      image:
-        "https://images.unsplash.com/photo-1574126154517-d1e0d89ef734?w=400",
-    },
-    {
-      id: 3,
-      title: "Garlic Knots",
-      description: "Order of 6 garlic knots served with tasty marinara sauce.",
-      price: "$5.99",
-      stock: 10,
-      status: "Rejected",
-      category: "Sides",
-      image:
-        "https://images.unsplash.com/photo-1534353436294-0dbd4bdac845?w=400",
-    },
-  ]);
 
   const orders: {
     id: string;
@@ -240,30 +212,6 @@ export function RestaurantDetail() {
     amount: order.amount,
   }));
 
-  const [isChatModalOpen, setIsChatModalOpen] = useState(false);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [selectedItem, setSelectedItem] = useState<any>(null);
-
-  const handleEditClick = (item: any) => {
-    setSelectedItem({ ...item });
-    setIsEditModalOpen(true);
-  };
-
-  const handleSaveEdit = () => {
-    setListings((prev) =>
-      prev.map((item) => (item.id === selectedItem.id ? selectedItem : item)),
-    );
-    setIsEditModalOpen(false);
-  };
-
-  const toggleItemStatus = (id: number, currentStatus: string) => {
-    const newStatus = currentStatus === "Approved" ? "Rejected" : "Approved";
-    setListings((prev) =>
-      prev.map((item) =>
-        item.id === id ? { ...item, status: newStatus } : item,
-      ),
-    );
-  };
 
   return (
     <AdminLayout>
@@ -337,13 +285,6 @@ export function RestaurantDetail() {
           >
             <Info className="h-4 w-4" />
             General Info
-          </button>
-          <button
-            onClick={() => setActiveTab("items")}
-            className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 whitespace-nowrap ${activeTab === "items" ? "bg-white text-[#E4983A] shadow-lg shadow-gray-200" : "text-gray-500 hover:text-gray-700"}`}
-          >
-            <Package className="h-4 w-4" />
-            Product Items
           </button>
           <button
             onClick={() => setActiveTab("orders")}
@@ -664,232 +605,6 @@ export function RestaurantDetail() {
             </div>
           )}
 
-          {activeTab === "items" && (
-            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
-                <div className="flex items-center gap-3">
-                  <h3 className="font-bold text-gray-900">Manage Items</h3>
-                  <span className="px-3 py-1 bg-gray-100 text-gray-500 text-xs font-bold rounded-full">
-                    {listings.length} Results
-                  </span>
-                </div>
-
-                <div className="flex items-center gap-3 w-full md:w-auto">
-                  <FilterSelect
-                    label="Category"
-                    value={categoryFilter}
-                    onChange={setCategoryFilter}
-                    options={[
-                      { label: "All Categories", value: "all" },
-                      { label: "Pizza", value: "Pizza" },
-                      { label: "Sides", value: "Sides" },
-                      { label: "Beverages", value: "Beverages" },
-                    ]}
-                  />
-                  <div className="flex gap-2 p-1 bg-gray-50 rounded-xl border border-gray-100">
-                    <button
-                      onClick={() => setItemsViewMode("grid")}
-                      className={`p-2 rounded-lg transition-all ${itemsViewMode === "grid" ? "bg-white text-[#E4983A] shadow-sm" : "text-gray-400 hover:text-gray-600"}`}
-                    >
-                      <LayoutGrid className="h-5 w-5" />
-                    </button>
-                    <button
-                      onClick={() => setItemsViewMode("list")}
-                      className={`p-2 rounded-lg transition-all ${itemsViewMode === "list" ? "bg-white text-[#E4983A] shadow-sm" : "text-gray-400 hover:text-gray-600"}`}
-                    >
-                      <ListIcon className="h-5 w-5" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {itemsViewMode === "grid" ? (
-                <div className="space-y-10">
-                  {Object.entries(
-                    listings
-                      .filter(
-                        (item) =>
-                          categoryFilter === "all" ||
-                          item.category === categoryFilter,
-                      )
-                      .reduce(
-                        (acc, item) => {
-                          const cat = item.category || "Other";
-                          if (!acc[cat]) acc[cat] = [];
-                          acc[cat].push(item);
-                          return acc;
-                        },
-                        {} as Record<string, typeof listings>,
-                      ),
-                  ).map(([category, items]) => (
-                    <div key={category} className="space-y-4">
-                      <h4 className="text-lg font-black text-gray-900 border-l-4 border-[#E4983A] pl-3 uppercase tracking-wider">
-                        {category}
-                      </h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {items.map((item) => (
-                          <Card
-                            key={item.id}
-                            noPadding
-                            className="group hover:shadow-2xl transition-all duration-500 hover:-translate-y-1"
-                          >
-                            <div className="relative h-56 overflow-hidden">
-                              <img
-                                src={item.image}
-                                alt={item.title}
-                                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                              />
-                              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                              <div className="absolute top-4 right-4">
-                                <Badge
-                                  variant={
-                                    item.status === "Approved"
-                                      ? "success"
-                                      : item.status === "Pending"
-                                        ? "warning"
-                                        : "error"
-                                  }
-                                  className="shadow-lg backdrop-blur-md"
-                                >
-                                  {item.status}
-                                </Badge>
-                              </div>
-                              <button
-                                onClick={() => handleEditClick(item)}
-                                className="absolute bottom-4 right-4 p-3 bg-white text-[#E4983A] rounded-2xl shadow-xl transform translate-y-12 group-hover:translate-y-0 transition-transform duration-500 hover:bg-[#E4983A] hover:text-white"
-                              >
-                                <Edit2 className="h-5 w-5" />
-                              </button>
-                            </div>
-                            <div className="p-6">
-                              <div className="flex justify-between items-start mb-4">
-                                <h4 className="font-black text-gray-900 text-lg">
-                                  {item.title}
-                                </h4>
-                                <span className="font-black text-[#E4983A] text-xl">
-                                  {item.price}
-                                </span>
-                              </div>
-                              <div className="flex justify-between items-center pt-4 border-t border-gray-100">
-                                <div className="flex flex-col">
-                                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                                    Inventory
-                                  </span>
-                                  <span className="text-sm font-bold text-gray-700">
-                                    {item.stock} in stock
-                                  </span>
-                                </div>
-                                <div className="flex gap-2">
-                                  <button
-                                    onClick={() =>
-                                      toggleItemStatus(item.id, item.status)
-                                    }
-                                    className={`p-2 rounded-xl border transition-all ${item.status === "Approved" ? "bg-rose-50 border-rose-100 text-rose-600 hover:bg-rose-600 hover:text-white" : "bg-emerald-50 border-emerald-100 text-emerald-600 hover:bg-emerald-600 hover:text-white"}`}
-                                  >
-                                    {item.status === "Approved" ? (
-                                      <X className="h-4 w-4" />
-                                    ) : (
-                                      <Check className="h-4 w-4" />
-                                    )}
-                                  </button>
-                                </div>
-                              </div>
-                            </div>
-                          </Card>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <Card
-                  noPadding
-                  className="overflow-hidden border-none shadow-xl shadow-gray-100/50"
-                >
-                  <Table
-                    data={listings.filter(
-                      (item) =>
-                        categoryFilter === "all" ||
-                        item.category === categoryFilter,
-                    )}
-                    columns={[
-                      {
-                        header: "Picture",
-                        cell: (item) => (
-                          <div className="w-14 h-14 rounded-2xl overflow-hidden border-2 border-gray-50 shadow-sm">
-                            <img
-                              src={item.image}
-                              alt={item.title}
-                              className="w-full h-full object-cover transform transition-transform hover:scale-110"
-                            />
-                          </div>
-                        ),
-                      },
-                      {
-                        header: "Item Name",
-                        accessorKey: "title",
-                        className: "font-black text-gray-900 text-base",
-                      },
-                      {
-                        header: "Price",
-                        accessorKey: "price",
-                        className: "text-[#E4983A] font-black text-lg",
-                      },
-                      {
-                        header: "Stock",
-                        accessorKey: "stock",
-                        className: "font-bold text-gray-700",
-                      },
-                      {
-                        header: "Status",
-                        cell: (item) => (
-                          <div className="flex items-center gap-3">
-                            <Badge
-                              variant={
-                                item.status === "Approved"
-                                  ? "success"
-                                  : item.status === "Pending"
-                                    ? "warning"
-                                    : "error"
-                              }
-                            >
-                              {item.status}
-                            </Badge>
-                            <button
-                              onClick={() =>
-                                toggleItemStatus(item.id, item.status)
-                              }
-                              className={`p-2 rounded-xl transition-all ${item.status === "Approved" ? "bg-rose-50 text-rose-600 hover:bg-rose-100" : "bg-emerald-50 text-emerald-600 hover:bg-emerald-100"}`}
-                            >
-                              {item.status === "Approved" ? (
-                                <X className="h-4 w-4" />
-                              ) : (
-                                <Check className="h-4 w-4" />
-                              )}
-                            </button>
-                          </div>
-                        ),
-                      },
-                      {
-                        header: "Action",
-                        cell: (item) => (
-                          <Button
-                            size="sm"
-                            variant="secondary"
-                            onClick={() => handleEditClick(item)}
-                            className="px-6 rounded-xl font-bold"
-                          >
-                            Edit Item
-                          </Button>
-                        ),
-                      },
-                    ]}
-                  />
-                </Card>
-              )}
-            </div>
-          )}
-
           {activeTab === "orders" && (
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
               <Card
@@ -1043,107 +758,6 @@ export function RestaurantDetail() {
           )}
         </div>
       </div>
-
-      {/* Edit Modal */}
-      <Modal
-        isOpen={isEditModalOpen}
-        onClose={() => setIsEditModalOpen(false)}
-        title="Quick Item Edit"
-      >
-        <div className="space-y-6">
-          <div className="flex justify-center -mt-2">
-            <div className="relative w-40 h-40 rounded-[32px] overflow-hidden border-4 border-gray-50 shadow-2xl group">
-              <img
-                src={selectedItem?.image}
-                alt=""
-                className="w-full h-full object-cover transition-transform group-hover:scale-105"
-              />
-              <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                <button className="text-white text-[10px] font-black uppercase tracking-widest px-4 py-2 bg-white/20 backdrop-blur-xl rounded-full border border-white/30">
-                  Replace Hero Image
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <Input
-              label="Item Name"
-              value={selectedItem?.title || ""}
-              onChange={(e) =>
-                setSelectedItem({ ...selectedItem, title: e.target.value })
-              }
-              className="rounded-2xl border-gray-100 font-bold"
-            />
-
-            <div>
-              <label className="block text-sm font-bold text-gray-700 mb-1.5">
-                Description
-              </label>
-              <textarea
-                value={selectedItem?.description || ""}
-                onChange={(e) =>
-                  setSelectedItem({
-                    ...selectedItem,
-                    description: e.target.value,
-                  })
-                }
-                className="w-full min-h-[100px] border-2 border-gray-100 rounded-2xl px-4 py-3 focus:ring-2 focus:ring-[#E4983A]/20 focus:border-[#E4983A] outline-none transition-all resize-y text-gray-700 font-medium"
-                placeholder="Describe your item..."
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-bold text-gray-700 mb-1.5">
-                  Platform Standard Price
-                </label>
-                <div className="flex items-center gap-2 bg-gray-50 border border-gray-100 rounded-2xl px-4 py-3 text-gray-400 font-black">
-                  <DollarSign className="h-4 w-4" />
-                  {selectedItem?.price || "$5.99"}
-                </div>
-              </div>
-              <Input
-                label="Stock Level"
-                type="number"
-                value={selectedItem?.stock || 0}
-                onChange={(e) =>
-                  setSelectedItem({
-                    ...selectedItem,
-                    stock: parseInt(e.target.value) || 0,
-                  })
-                }
-                className="rounded-2xl border-gray-100 font-bold"
-              />
-            </div>
-          </div>
-
-          <div className="pt-6 flex items-center justify-between gap-4 border-t border-gray-100 mt-6">
-            <button
-              onClick={() => setIsEditModalOpen(false)}
-              className="text-gray-400 font-bold hover:text-gray-600 transition-colors text-sm"
-            >
-              Discard
-            </button>
-            <div className="flex gap-3">
-              <Button
-                variant="outline"
-                onClick={() => setIsEditModalOpen(false)}
-                className="px-6 border-gray-200"
-              >
-                Cancel
-              </Button>
-              <Button
-                variant="primary"
-                onClick={handleSaveEdit}
-                className="px-6 shadow-xl shadow-orange-500/20"
-              >
-                Update Item
-              </Button>
-            </div>
-          </div>
-        </div>
-      </Modal>
 
       <SupportChatModal
         isOpen={isChatModalOpen}

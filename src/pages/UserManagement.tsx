@@ -1,4 +1,4 @@
-﻿import { useState, useMemo } from 'react';
+﻿import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AdminLayout } from '../components/layout/AdminLayout';
 import { Table } from '../components/ui/Table';
@@ -16,6 +16,13 @@ export function UserManagement() {
   const [statusFilter, setStatusFilter] = useState('all_status');
   const [ratingFilter, setRatingFilter] = useState('all_ratings');
   const navigate = useNavigate();
+
+  // Reset filters when changing tabs
+  useEffect(() => {
+    setStatusFilter('all_status');
+    setStateFilter('all_states');
+    setRatingFilter('all_ratings');
+  }, [activeTab]);
 
   // API Hooks for Restaurants
   const { data: restaurantsData, isLoading: isRestaurantsLoading } = useGetAllRestaurantsQuery({
@@ -87,9 +94,9 @@ export function UserManagement() {
   const restaurantData = useMemo(() => {
     if (!restaurantsData?.restaurants) return [];
     return restaurantsData.restaurants.map((r: any) => ({
-      id: r.restaurantId,
+      id: r.restaurantId || r._id || r.id,
       _id: r._id,
-      name: r.restaurantName,
+      name: r.restaurantName || r.name,
       owner: r.owner,
       state: r.state || 'N/A',
       status: r.status, // approved, pending_approval, blocked
@@ -127,9 +134,15 @@ export function UserManagement() {
     return customerData.filter((c: any) => {
       const matchesSearch = c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         c.email.toLowerCase().includes(searchTerm.toLowerCase());
-      return matchesSearch;
+
+      const matchesStatus = statusFilter === 'all_status' ||
+        (statusFilter === 'approved' && c.status === 'Active') ||
+        (statusFilter === 'blocked' && c.status === 'Blocked') ||
+        (statusFilter === 'pending_approval' && c.status === 'pending_approval');
+
+      return matchesSearch && matchesStatus;
     });
-  }, [customerData, searchTerm]);
+  }, [customerData, searchTerm, statusFilter]);
 
   return <AdminLayout>
     <div className="space-y-6">
@@ -174,7 +187,7 @@ export function UserManagement() {
                   onChange={setStateFilter}
                   options={[
                     { label: 'All States', value: 'all_states' },
-                    { label: 'Pending States', value: 'Pending State' },
+                    { label: 'Pending', value: 'Pending' },
                   ]}
                 />
 
@@ -200,9 +213,14 @@ export function UserManagement() {
               icon={ShieldAlert}
               value={statusFilter}
               onChange={setStatusFilter}
-              options={[
+              options={activeTab === 'restaurants' ? [
                 { label: 'All Status', value: 'all_status' },
                 { label: 'Approved', value: 'approved' },
+                { label: 'Pending Approval', value: 'pending_approval' },
+                { label: 'Blocked', value: 'blocked' },
+              ] : [
+                { label: 'All Status', value: 'all_status' },
+                { label: 'Active', value: 'approved' },
                 { label: 'Pending Approval', value: 'pending_approval' },
                 { label: 'Blocked', value: 'blocked' },
               ]}
@@ -282,9 +300,14 @@ export function UserManagement() {
             { header: 'Reviews', accessorKey: 'reviews' },
             {
               header: 'Status',
-              cell: (item: any) => <Badge variant={item.status === 'Active' ? 'success' : 'error'}>
-                {item.status}
-              </Badge>
+              cell: (item: any) => {
+                const status = item.status.toLowerCase();
+                const variant = status === 'active' ? 'success' : status === 'blocked' ? 'error' : 'warning';
+                const label = status === 'pending_approval' ? 'Pending Approval' : item.status;
+                return <Badge variant={variant as any}>
+                  {label}
+                </Badge>
+              }
             },
             {
               header: 'Actions',
