@@ -102,21 +102,21 @@ export const dashboardApi = baseApi.injectEndpoints({
         }),
         getCustomers: builder.query({
             query: ({ page = 1, limit = 10 }) =>
-                `/admin/users/customers?status=all_status&page=${page}&limit=${limit}`,
+                `/api/v1/admin/users/customers?status=all_status&page=${page}&limit=${limit}`,
             providesTags: ["admin-users"],
         }),
         blockCustomer: builder.mutation({
             query: (id) => ({
-                url: `/api/v1/admin/restaurants/${id}/block`,
-                method: 'POST',
+                url: `/api/v1/admin/users/${id}/block`,
+                method: 'PATCH',
                 body: {},
             }),
             invalidatesTags: ["admin-users"],
         }),
         unblockCustomer: builder.mutation({
             query: (id) => ({
-                url: `/api/v1/admin/restaurants/${id}/unblock`,
-                method: 'POST',
+                url: `/api/v1/admin/users/${id}/unblock`,
+                method: 'PATCH',
                 body: {},
             }),
             invalidatesTags: ["admin-users"],

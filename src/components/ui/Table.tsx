@@ -12,12 +12,20 @@ interface TableProps<T> {
   columns: Column<T>[];
   isLoading?: boolean;
   onRowClick?: (item: T) => void;
+  currentPage?: number;
+  totalPages?: number;
+  onPageChange?: (page: number) => void;
+  totalResults?: number;
 }
 export function Table<T>({
   data,
   columns,
   isLoading,
-  onRowClick
+  onRowClick,
+  currentPage = 1,
+  totalPages = 1,
+  onPageChange,
+  totalResults = 0
 }: TableProps<T>) {
   if (isLoading) {
     return <div className="w-full bg-white rounded-xl shadow-sm border border-gray-100 p-8 space-y-4">
@@ -46,16 +54,31 @@ export function Table<T>({
 
     {/* Simple Pagination Footer */}
     <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-between">
-      <p className="text-sm text-gray-500">
-        Showing 1 to {data.length} of {data.length} results
+      <p className="text-sm text-gray-500 font-medium">
+        Showing {totalResults > 0 ? (currentPage - 1) * 10 + 1 : 0} to {Math.min(currentPage * 10, totalResults)} of {totalResults} results
       </p>
-      <div className="flex gap-2">
-        <Button variant="secondary" size="sm" disabled>
-          <ChevronLeft className="h-4 w-4" />
-        </Button>
-        <Button variant="secondary" size="sm">
-          <ChevronRight className="h-4 w-4" />
-        </Button>
+      <div className="flex items-center gap-4">
+        <span className="text-sm text-gray-500 font-medium">
+          Page {currentPage} of {totalPages}
+        </span>
+        <div className="flex gap-2">
+          <Button
+            variant="secondary"
+            size="sm"
+            disabled={currentPage <= 1 || !onPageChange}
+            onClick={() => onPageChange?.(currentPage - 1)}
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="secondary"
+            size="sm"
+            disabled={currentPage >= totalPages || !onPageChange}
+            onClick={() => onPageChange?.(currentPage + 1)}
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
     </div>
   </div>;

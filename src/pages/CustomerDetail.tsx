@@ -6,43 +6,62 @@ import { Avatar } from '../components/ui/Avatar';
 import { Badge } from '../components/ui/Badge';
 import { Table } from '../components/ui/Table';
 import { ArrowLeft, Mail, Phone, MapPin, Calendar, Ban } from 'lucide-react';
-import { useGetSingleCustomerQuery, useGetCustomerProfileQuery } from '../redux/features/dashboardApi';
+import { useGetSingleCustomerQuery, useGetCustomerProfileQuery, useBlockCustomerMutation, useUnblockCustomerMutation } from '../redux/features/dashboardApi';
 import { format } from 'date-fns';
 
 export function CustomerDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [blockCustomer] = useBlockCustomerMutation();
+  const [unblockCustomer] = useUnblockCustomerMutation();
 
   // Fetching data from both endpoints
   // First get stats/basic info which contains the correct CustomarId for profile fetch
   const { data: statsResponse, isLoading: isStatsLoading } = useGetSingleCustomerQuery(id);
-  const statsData = statsResponse || {};
+  const statsData = statsResponse?.data || statsResponse || {};
 
   // Use CustomarId (or CustomerID) from stats to fetch profile
-  const profileId = statsData.CustomarId || statsData.CustomerID || id; // Fallback to URL id if API id missing
+  const profileId = statsData.CustomarId || statsData.CustomerID || statsData.id || statsData._id || id; // Fallback to URL id if API id missing
   const { data: profileResponse, isLoading: isProfileLoading } = useGetCustomerProfileQuery(profileId, {
     skip: !profileId
   });
 
-  const profileData = profileResponse || {};
+  const profileData = profileResponse?.data || profileResponse || {};
   // Loading is true if stats are loading, or if we have a profileId and profile is loading
   const isLoading = isStatsLoading || (!!profileId && isProfileLoading);
 
   // Combine data for UI
   const customer = {
-    id: profileData.CustomerID || statsData.CustomarId || id,
-    name: profileData.Name || statsData.CustomarName || 'N/A',
+    id: profileData.id || profileData.CustomerID || statsData.CustomarId || id,
+    name: profileData.fullName || profileData.Name || statsData.CustomarName || 'N/A',
     email: profileData.email || 'N/A',
-    phone: profileData.phoen || profileData.phone || 'N/A',
-    location: profileData.state || 'N/A',
-    joinDate: profileData.date ? format(new Date(profileData.date), 'MMM dd, yyyy') : 'N/A',
-    status: profileData.isActive === false ? 'Blocked' : 'Active', // Default to Active if undefined or true
-    avatar: profileData.profilePick || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200',
+    phone: profileData.phoneNumber || profileData.phoen || profileData.phone || 'N/A',
+    location: profileData.address || profileData.state || 'N/A',
+    joinDate: (profileData.createdAt || profileData.date) ? format(new Date(profileData.createdAt || profileData.date), 'MMM dd, yyyy') : 'N/A',
+    status: profileData.isActive === false || profileData.status === 'blocked' || profileData.status === 'suspended'
+      ? 'Blocked'
+      : profileData.status === 'pending_approval'
+        ? 'Pending Approval'
+        : 'Active',
+    avatar: profileData.profilePicture || profileData.profilePick || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200',
     stats: {
-      totalOrders: statsData.summary?.totalOrders || 0,
+      totalOrders: profileData.totalUpload?.totalService || statsData.summary?.totalOrders || 0,
       totalSpent: ` ${statsData.summary?.totalSpent || 0}`,
       avgOrderValue: ` ${statsData.summary?.avgOrderValue || 0}`,
       savedMeals: 0
+    }
+  };
+
+  const handleBlockToggle = async () => {
+    try {
+      const targetId = customer.id; // This is the userId from stats/profile
+      if (customer.status === 'Blocked') {
+        await unblockCustomer(targetId).unwrap();
+      } else {
+        await blockCustomer(targetId).unwrap();
+      }
+    } catch (err) {
+      console.error('Failed to toggle block status:', err);
     }
   };
 
@@ -112,8 +131,12 @@ export function CustomerDetail() {
                   </div>
                 </div>
                 <div className="flex gap-3">
-                  <Button variant="danger" leftIcon={<Ban className="h-4 w-4" />}>
-                    Block User
+                  <Button
+                    variant={customer.status === 'Blocked' ? 'primary' : 'danger'}
+                    leftIcon={<Ban className="h-4 w-4" />}
+                    onClick={handleBlockToggle}
+                  >
+                    {customer.status === 'Blocked' ? 'Unblock User' : 'Block User'}
                   </Button>
                 </div>
               </div>

@@ -5,6 +5,7 @@ import { Table } from '../components/ui/Table';
 import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
+import { Avatar } from '../components/ui/Avatar';
 import { Search, Star, MapPin, ShieldAlert } from 'lucide-react';
 import { FilterSelect } from '../components/ui/FilterSelect';
 import { useGetAllRestaurantsQuery, useApproveRestaurantMutation, useRejectRestaurantMutation, useBlockRestaurantMutation, useUnblockRestaurantMutation, useGetCustomersQuery, useBlockCustomerMutation, useUnblockCustomerMutation } from '../redux/features/dashboardApi';
@@ -15,28 +16,38 @@ export function UserManagement() {
   const [stateFilter, setStateFilter] = useState('all_states');
   const [statusFilter, setStatusFilter] = useState('all_status');
   const [ratingFilter, setRatingFilter] = useState('all_ratings');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [restaurantPage, setRestaurantPage] = useState(1);
   const navigate = useNavigate();
 
-  // Reset filters when changing tabs
+  // Reset filters and pagination when changing tabs
   useEffect(() => {
     setStatusFilter('all_status');
     setStateFilter('all_states');
     setRatingFilter('all_ratings');
+    setCurrentPage(1);
+    setRestaurantPage(1);
   }, [activeTab]);
+
+  // Reset pagination when searching or filtering
+  useEffect(() => {
+    setCurrentPage(1);
+    setRestaurantPage(1);
+  }, [searchTerm, stateFilter, statusFilter, ratingFilter]);
 
   // API Hooks for Restaurants
   const { data: restaurantsData, isLoading: isRestaurantsLoading } = useGetAllRestaurantsQuery({
     state: stateFilter,
     status: statusFilter,
     rating: ratingFilter,
-    page: 1,
-    limit: 50
+    page: restaurantPage,
+    limit: 10
   }, { skip: activeTab !== 'restaurants' });
 
   // API Hooks for Customers
   const { data: customersDataAPI, isLoading: isCustomersLoading } = useGetCustomersQuery({
-    page: 1,
-    limit: 50
+    page: currentPage,
+    limit: 10
   }, { skip: activeTab !== 'customers' });
 
   const [approveRestaurant] = useApproveRestaurantMutation();
@@ -101,7 +112,7 @@ export function UserManagement() {
       state: r.state || 'N/A',
       status: r.status, // approved, pending_approval, blocked
       listings: r.totalListings,
-      revenue: `$${(r.revenue || 0).toLocaleString()}`,
+      revenue: `$${(r.revenue || 0).toLocaleString()} `,
       rating: (r.ratings || 0).toFixed(1)
     }));
   }, [restaurantsData]);
@@ -109,16 +120,16 @@ export function UserManagement() {
   const customerData = useMemo(() => {
     if (!customersDataAPI?.data) return [];
     return customersDataAPI.data.map((c: any) => ({
-      id: c.restaurantId || c._id || c.id,
+      id: c.id || c.userId || c._id,
       _id: c._id,
       userId: c.userId,
-      originalId: c.id,
-      name: c.owner?.name || c.fullName || 'N/A',
-      email: c.owner?.email || c.phoneNumber || 'N/A',
-      orders: c.totalListings || c.totalUpload?.totalService || 0,
-      reviews: c.ratings || c.reviews?.totalReviews || 0,
-      status: c.status === 'approved' ? 'Active' : c.status === 'blocked' ? 'Blocked' : (c.status || 'Active'),
-      isBlocked: c.status === 'blocked'
+      name: c.fullName || 'N/A',
+      email: c.email || 'N/A',
+      orders: c.totalUpload?.totalService || 0,
+      reviews: c.reviews?.totalReviews || 0,
+      status: (c.status === 'blocked' || c.status === 'suspended') ? 'Blocked' : (c.status === 'pending_approval' ? 'Pending Approval' : 'Active'),
+      isBlocked: c.status === 'blocked' || c.status === 'suspended',
+      avatar: c.profilePicture
     }));
   }, [customersDataAPI]);
 
@@ -138,7 +149,7 @@ export function UserManagement() {
       const matchesStatus = statusFilter === 'all_status' ||
         (statusFilter === 'approved' && c.status === 'Active') ||
         (statusFilter === 'blocked' && c.status === 'Blocked') ||
-        (statusFilter === 'pending_approval' && c.status === 'pending_approval');
+        (statusFilter === 'pending_approval' && c.status === 'Pending Approval');
 
       return matchesSearch && matchesStatus;
     });
@@ -234,97 +245,122 @@ export function UserManagement() {
               Loading restaurants...
             </div>
           ) : (
-            <Table data={filteredRestaurants} columns={[
-              { header: 'Restaurant Name', accessorKey: 'name', className: 'font-medium text-gray-900' },
-              { header: 'Owner', accessorKey: 'owner' },
-              { header: 'State', accessorKey: 'state' },
-              {
-                header: 'Status',
-                cell: (item: any) => {
-                  const status = item.status.toLowerCase();
-                  return (
-                    <Badge variant={status === 'approved' ? 'success' : status === 'pending_approval' ? 'warning' : 'error'}>
-                      {status.replace('_', ' ')}
-                    </Badge>
-                  );
-                }
-              },
-              { header: 'Total Listings', accessorKey: 'listings' },
-              { header: 'Revenue', accessorKey: 'revenue' },
-              {
-                header: 'Rating',
-                cell: (item: any) => (
-                  <div className="flex items-center gap-1">
-                    <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />
-                    <span className="font-bold text-gray-900">{item.rating}</span>
+            <Table
+              data={filteredRestaurants}
+              currentPage={restaurantPage}
+              totalPages={restaurantsData?.pagination?.pages || 1}
+              totalResults={restaurantsData?.pagination?.total || filteredRestaurants.length}
+              onPageChange={setRestaurantPage}
+              columns={[
+                { header: 'Restaurant Name', accessorKey: 'name', className: 'font-medium text-gray-900' },
+                { header: 'Owner', accessorKey: 'owner' },
+                { header: 'State', accessorKey: 'state' },
+                {
+                  header: 'Status',
+                  cell: (item: any) => {
+                    const status = item.status.toLowerCase();
+                    return (
+                      <Badge variant={status === 'approved' ? 'success' : status === 'pending_approval' ? 'warning' : 'error'}>
+                        {status.replace('_', ' ')}
+                      </Badge>
+                    );
+                  }
+                },
+                { header: 'Total Listings', accessorKey: 'listings' },
+                { header: 'Revenue', accessorKey: 'revenue' },
+                {
+                  header: 'Rating',
+                  cell: (item: any) => (
+                    <div className="flex items-center gap-1">
+                      <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />
+                      <span className="font-bold text-gray-900">{item.rating}</span>
+                    </div>
+                  )
+                },
+                {
+                  header: 'Actions',
+                  cell: (item: any) => <div className="flex gap-2">
+                    <Button size="sm" variant="secondary" onClick={() => navigate(`/restaurant/${item.id}`)}>
+                      View
+                    </Button>
+                    {item.status.toLowerCase() === 'approved' ? (
+                      <Button size="sm" variant="danger" onClick={() => handleBlock(item.id)}>
+                        Block
+                      </Button>
+                    ) : item.status.toLowerCase() === 'blocked' ? (
+                      <Button size="sm" variant="primary" onClick={() => handleUnblock(item.id)}>
+                        Unblock
+                      </Button>
+                    ) : (
+                      <>
+                        <Button size="sm" variant="primary" onClick={() => handleApprove(item.id)}>
+                          Approve
+                        </Button>
+                        <Button size="sm" variant="danger" onClick={() => handleReject(item.id)}>
+                          Reject
+                        </Button>
+                      </>
+                    )}
                   </div>
-                )
-              },
-              {
-                header: 'Actions',
-                cell: (item: any) => <div className="flex gap-2">
-                  <Button size="sm" variant="secondary" onClick={() => navigate(`/restaurant/${item.id}`)}>
-                    View
-                  </Button>
-                  {item.status.toLowerCase() === 'approved' ? (
-                    <Button size="sm" variant="danger" onClick={() => handleBlock(item.id)}>
-                      Block
-                    </Button>
-                  ) : item.status.toLowerCase() === 'blocked' ? (
-                    <Button size="sm" variant="primary" onClick={() => handleUnblock(item.id)}>
-                      Unblock
-                    </Button>
-                  ) : (
-                    <>
-                      <Button size="sm" variant="primary" onClick={() => handleApprove(item.id)}>
-                        Approve
-                      </Button>
-                      <Button size="sm" variant="danger" onClick={() => handleReject(item.id)}>
-                        Reject
-                      </Button>
-                    </>
-                  )}
-                </div>
-              }
-            ]} />
+                }
+              ]} />
           )
         ) : isCustomersLoading ? (
           <div className="flex items-center justify-center h-64 bg-white rounded-3xl border border-gray-100 shadow-sm animate-pulse text-gray-400 font-medium">
             Loading customers...
           </div>
         ) : (
-          <Table data={filteredCustomers} columns={[
-            { header: 'Customer Name', accessorKey: 'name', className: 'font-medium text-gray-900' },
-            { header: 'Email/Phone', accessorKey: 'email' },
-            { header: 'Total Orders', accessorKey: 'orders' },
-            { header: 'Reviews', accessorKey: 'reviews' },
-            {
-              header: 'Status',
-              cell: (item: any) => {
-                const status = item.status.toLowerCase();
-                const variant = status === 'active' ? 'success' : status === 'blocked' ? 'error' : 'warning';
-                const label = status === 'pending_approval' ? 'Pending Approval' : item.status;
-                return <Badge variant={variant as any}>
-                  {label}
-                </Badge>
+          <Table
+            data={filteredCustomers}
+            currentPage={currentPage}
+            totalPages={customersDataAPI?.pagination?.pages || 1}
+            totalResults={customersDataAPI?.pagination?.total || filteredCustomers.length}
+            onPageChange={setCurrentPage}
+            columns={[
+              {
+                header: 'Customer Name',
+                cell: (item: any) => (
+                  <div className="flex items-center gap-3">
+                    <Avatar
+                      src={item.avatar}
+                      alt={item.name}
+                      fallback={item.name.split(' ').map((n: string) => n[0]).join('')}
+                      size="sm"
+                    />
+                    <span className="font-medium text-gray-900">{item.name}</span>
+                  </div>
+                )
+              },
+              { header: 'Email/Phone', accessorKey: 'email' },
+              { header: 'Total Orders', accessorKey: 'orders' },
+              { header: 'Reviews', accessorKey: 'reviews' },
+              {
+                header: 'Status',
+                cell: (item: any) => {
+                  const status = (item.status || 'Active').toLowerCase();
+                  const variant = status === 'active' ? 'success' : status === 'blocked' ? 'error' : 'warning';
+                  const label = status === 'pending_approval' ? 'Pending Approval' : item.status;
+                  return <Badge variant={variant as any}>
+                    {label}
+                  </Badge>
+                }
+              },
+              {
+                header: 'Actions',
+                cell: (item: any) => <div className="flex gap-2">
+                  <Button size="sm" variant="secondary" onClick={() => navigate(`/users/customer/${item.userId}`)}>
+                    Profile
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={item.status === 'Active' ? 'danger' : 'primary'}
+                    onClick={() => handleCustomerBlockToggle(item.userId, item.isBlocked)}
+                  >
+                    {item.status === 'Active' ? 'Block' : 'Unblock'}
+                  </Button>
+                </div>
               }
-            },
-            {
-              header: 'Actions',
-              cell: (item: any) => <div className="flex gap-2">
-                <Button size="sm" variant="secondary" onClick={() => navigate(`/users/customer/${item.id}`)}>
-                  Profile
-                </Button>
-                <Button
-                  size="sm"
-                  variant={item.status === 'Active' ? 'danger' : 'primary'}
-                  onClick={() => handleCustomerBlockToggle(item.id, item.isBlocked)}
-                >
-                  {item.status === 'Active' ? 'Block' : 'Unblock'}
-                </Button>
-              </div>
-            }
-          ]} />
+            ]} />
         )}
       </div>
     </div>
