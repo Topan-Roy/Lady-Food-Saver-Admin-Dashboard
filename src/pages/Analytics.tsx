@@ -57,7 +57,7 @@ export function Analytics() {
   const [timeFilter, setTimeFilter] = useState<any>('7d');
   const [customDates, setCustomDates] = useState<{ start: Date; end: Date } | undefined>();
   const [data, setData] = useState(mockData['7d']);
-  const [selectedProviderId] = useState('69714abce548ab10b90c0e50'); // Default ID as requested
+  const [selectedProviderId] = useState(''); // Default ID as requested
   const navigate = useNavigate();
 
   // Fetch feedback data

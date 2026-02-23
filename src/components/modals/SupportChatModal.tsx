@@ -50,7 +50,7 @@ export function SupportChatModal({
       const handleInitChat = async () => {
         try {
           // prioritized user id from the mapped support ticket
-          const targetId = ticket.userId || ticket.user || ticket.providerId || ticket.customerId || ticket.id;
+          const targetId = ticket.userID || ticket.userId || ticket.user || ticket.providerId || ticket.customerId || ticket.id;
 
           // As per user's example, both customer and provider use providerId key for initialization
           const payload = { providerId: targetId };
@@ -77,7 +77,7 @@ export function SupportChatModal({
     if (!message.trim() || !conversationId) return;
 
     try {
-      const targetId = ticket.userId || ticket.user || ticket.providerId || ticket.customerId || ticket.id;
+      const targetId = ticket.userID || ticket.userId || ticket.user || ticket.providerId || ticket.customerId || ticket.id;
       const isRestaurant = ticket.userType?.toLowerCase() === 'restaurant' || ticket.type?.toLowerCase() === 'restaurant';
 
       const payload = {
@@ -113,7 +113,7 @@ export function SupportChatModal({
           <div>
             <p className="font-bold text-gray-900 group">
               {ticket.userName || ticket.user || ticket.userId || "Unknown User"}
-              <span className="ml-2 text-[10px] text-gray-400 font-normal">({ticket.userId || ticket.id})</span>
+              <span className="ml-2 text-[10px] text-gray-400 font-normal">({ticket.userID || ticket.userId || ticket.id})</span>
             </p>
             <p className="text-xs font-medium text-gray-500 flex items-center gap-2">
               <span className={`h-2 w-2 rounded-full ${ticket.status === 'Open' ? 'bg-red-500' : 'bg-green-500'}`} />
@@ -144,7 +144,7 @@ export function SupportChatModal({
           </div>
         ) : (
           chatMessages.map((msg: any) => {
-            const targetId = ticket.userId || ticket.user || ticket.providerId || ticket.customerId || ticket.id;
+            const targetId = ticket.userID || ticket.userId || ticket.user || ticket.providerId || ticket.customerId || ticket.id;
 
             // If sender is NOT the customer/provider we are chatting with, it must be an ADMIN
             const isTarget = msg.senderId === targetId || msg.sender?.id === targetId;

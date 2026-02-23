@@ -44,6 +44,11 @@ export const chatApi = baseApi.injectEndpoints({
             query: () => "/api/v1/support/my-tickets",
             providesTags: ["Chat"],
         }),
+        getAdminSupportTickets: builder.query({
+            query: ({ status = 'Open', priority = 'Medium', page = 1, limit = 10 }) =>
+                `/api/v1/support/admin/tickets?status=${status}&priority=${priority}&page=${page}&limit=${limit}`,
+            providesTags: ["Chat"],
+        }),
     }),
 });
 
@@ -53,5 +58,6 @@ export const {
     useSendMessageMutation,
     useAdminSendMessageMutation,
     useAdminToProviderMutation,
-    useGetSupportTicketsQuery
+    useGetSupportTicketsQuery,
+    useGetAdminSupportTicketsQuery
 } = chatApi;

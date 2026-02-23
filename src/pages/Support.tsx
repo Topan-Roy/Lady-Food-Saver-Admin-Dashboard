@@ -4,15 +4,16 @@ import { Table } from '../components/ui/Table';
 import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
 import { SupportChatModal } from '../components/modals/SupportChatModal';
-import { useGetSupportTicketsQuery } from '../redux/features/chat';
+import { useGetAdminSupportTicketsQuery } from '../redux/features/chat';
 import { formatDistanceToNow } from 'date-fns';
 
 interface SupportTicket {
   id: string; // display ticketId
   _id: string; // internal mongodb id
   subject: string;
-  userId: string; // user id from api
-  userType: string; // type from api
+  userName: string; // display name
+  userID: string; // actual database id
+  userType: string;
   status: string;
   priority: string;
   date: string;
@@ -20,20 +21,28 @@ interface SupportTicket {
 }
 
 export function Support() {
-  const { data: ticketsResponse, isLoading } = useGetSupportTicketsQuery({});
+  const [currentPage, setCurrentPage] = useState(1);
+  const { data: ticketsResponse, isLoading } = useGetAdminSupportTicketsQuery({
+    status: 'Open',
+    priority: 'Medium',
+    page: currentPage,
+    limit: 10
+  });
   const [selectedTicket, setSelectedTicket] = useState<SupportTicket | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const tickets: SupportTicket[] = (ticketsResponse?.data || []).map((t: any) => ({
-    id: t.ticketId,
-    _id: t._id,
-    subject: t.subject,
-    userId: t.userId,
-    userType: t.userType,
-    status: t.status,
-    priority: t.priority,
-    date: formatDistanceToNow(new Date(t.createdAt), { addSuffix: true }),
-    description: t.description
+  const tickets: SupportTicket[] = (ticketsResponse?.data?.tickets || []).map((t: any) => ({
+    id: t["Ticket ID"] || t.ticketId,
+    _id: t.id || t._id,
+    subject: t.Subject || t.subject,
+    userName: t.User || t.userName || "Unknown",
+    userID: t.userID || t.userId || t._id,
+    userType: t["User Type"] || t.userType,
+    status: t.Status || t.status,
+    priority: t.Priority || t.priority,
+    date: t.Date ? formatDistanceToNow(new Date(t.Date), { addSuffix: true }) :
+      (t.createdAt ? formatDistanceToNow(new Date(t.createdAt), { addSuffix: true }) : 'N/A'),
+    description: t.Description || t.description
   }));
 
   const openChat = (ticket: any) => {
@@ -62,6 +71,10 @@ export function Support() {
       <Table
         isLoading={isLoading}
         data={tickets}
+        currentPage={currentPage}
+        totalPages={ticketsResponse?.data?.meta?.totalPages || 1}
+        totalResults={ticketsResponse?.data?.meta?.total || 0}
+        onPageChange={(page) => setCurrentPage(page)}
         columns={[{
           header: 'Ticket ID',
           accessorKey: 'id',
@@ -74,7 +87,7 @@ export function Support() {
           cell: (item: SupportTicket) => <Badge variant="outline">{item.userType}</Badge>
         }, {
           header: 'User',
-          accessorKey: 'userId'
+          accessorKey: 'userName'
         }, {
           header: 'Priority',
           cell: (item: SupportTicket) => <span className={`font-medium ${item.priority === 'High' ? 'text-red-600' : item.priority === 'Medium' ? 'text-yellow-600' : 'text-blue-600'}`}>
