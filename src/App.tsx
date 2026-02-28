@@ -11,6 +11,7 @@ import { RestaurantDetail } from './pages/RestaurantDetail';
 import { OrderDetail } from './pages/OrderDetail';
 import { Login } from './pages/Login';
 import { ProtectedRoute } from './components/layout/ProtectedRoute';
+import { PublicRoute } from './components/layout/PublicRoute';
 import { TaxRules } from './pages/TaxRules';
 import { LegalDocuments } from './pages/LegalDocuments';
 import { ProfilePage } from './pages/ProfilePage';
@@ -20,7 +21,9 @@ import { PromotionalBanners } from './pages/PromotionalBanners';
 export function App() {
   return <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
     <Routes>
-      <Route path="/login" element={<Login />} />
+      <Route element={<PublicRoute />}>
+        <Route path="/login" element={<Login />} />
+      </Route>
 
       <Route element={<ProtectedRoute />}>
         <Route path="/" element={<Dashboard />} />
