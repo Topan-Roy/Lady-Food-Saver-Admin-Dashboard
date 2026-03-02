@@ -85,17 +85,12 @@ export function Sidebar() {
   return (
     <aside className="w-64 bg-white border-r border-gray-100 fixed inset-y-0 left-0 z-50 flex flex-col">
       {/* Logo Area */}
-      <div className="h-16 flex items-center px-6 border-b border-gray-50">
-        <div className="flex items-center gap-3">
-          <img
-            src={getAppLogo()}
-            alt="DineFive"
-            className="w-10 h-10 object-contain"
-          />
-          <span className="text-xl font-bold text-gray-900 tracking-tight">
-            DineFive
-          </span>
-        </div>
+      <div className="h-16 flex items-center justify-center border-b border-gray-50">
+        <img
+          src={getAppLogo()}
+          alt="DineFive"
+          className="w-16 h-16 object-contain"
+        />
       </div>
 
       {/* Navigation */}
