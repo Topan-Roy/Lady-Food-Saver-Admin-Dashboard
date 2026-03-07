@@ -1,13 +1,13 @@
-﻿import { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { AdminLayout } from '../components/layout/AdminLayout';
-import { Button } from '../components/ui/Button';
-import { Card } from '../components/ui/Card';
-import { Badge } from '../components/ui/Badge';
-import { InvoiceModal } from '../components/modals/InvoiceModal';
-import { ArrowLeft, Printer, User, Store } from 'lucide-react';
-import { useGetOrderDetailsQuery } from '../redux/features/dashboardApi';
-import { format } from 'date-fns';
+﻿import { useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { AdminLayout } from "../components/layout/AdminLayout";
+import { Button } from "../components/ui/Button";
+import { Card } from "../components/ui/Card";
+import { Badge } from "../components/ui/Badge";
+import { InvoiceModal } from "../components/modals/InvoiceModal";
+import { ArrowLeft, Printer, User, Store } from "lucide-react";
+import { useGetOrderDetailsQuery } from "../redux/features/dashboardApi";
+import { format } from "date-fns";
 
 export function OrderDetail() {
   const { id } = useParams();
@@ -31,8 +31,10 @@ export function OrderDetail() {
       <AdminLayout>
         <div className="text-center py-12">
           <h2 className="text-2xl font-bold text-gray-900">Order not found</h2>
-          <p className="text-gray-500 mt-2">The order you're looking for doesn't exist or there was an error.</p>
-          <Button className="mt-6" onClick={() => navigate('/orders')}>
+          <p className="text-gray-500 mt-2">
+            The order you're looking for doesn't exist or there was an error.
+          </p>
+          <Button className="mt-6" onClick={() => navigate("/orders")}>
             Back to Orders
           </Button>
         </div>
@@ -44,21 +46,35 @@ export function OrderDetail() {
 
   const getStatusVariant = (status: string) => {
     status = status.toLowerCase();
-    if (status === 'completed' || status === 'order delivered') return 'success';
-    if (status === 'pending' || status === 'preparing' || status === 'order placed') return 'warning';
-    if (status === 'cancelled') return 'error';
-    return 'info';
+    if (status === "completed" || status === "order delivered")
+      return "success";
+    if (
+      status === "pending" ||
+      status === "preparing" ||
+      status === "order placed"
+    )
+      return "warning";
+    if (status === "cancelled") return "error";
+    return "info";
   };
 
   return (
     <AdminLayout>
       <div className="space-y-6">
         <div className="flex justify-between items-center">
-          <Button variant="ghost" leftIcon={<ArrowLeft className="h-4 w-4" />} onClick={() => navigate(-1)}>
+          <Button
+            variant="ghost"
+            leftIcon={<ArrowLeft className="h-4 w-4" />}
+            onClick={() => navigate(-1)}
+          >
             Back to Orders
           </Button>
           <div className="flex gap-3">
-            <Button variant="outline" leftIcon={<Printer className="h-4 w-4" />} onClick={() => setShowInvoice(true)}>
+            <Button
+              variant="outline"
+              leftIcon={<Printer className="h-4 w-4" />}
+              onClick={() => setShowInvoice(true)}
+            >
               Print Invoice
             </Button>
           </div>
@@ -73,17 +89,26 @@ export function OrderDetail() {
                     Order #{order.orderId}
                   </h1>
                   <p className="text-gray-500 mt-1">
-                    {format(new Date(order.createdAt), 'MMM dd, yyyy \u2022 hh:mm a')}
+                    {format(
+                      new Date(order.createdAt),
+                      "MMM dd, yyyy \u2022 hh:mm a",
+                    )}
                   </p>
                 </div>
-                <Badge variant={getStatusVariant(order.status)} className="text-lg px-4 py-1 capitalize">
+                <Badge
+                  variant={getStatusVariant(order.status)}
+                  className="text-lg px-4 py-1 capitalize"
+                >
                   {order.status}
                 </Badge>
               </div>
 
               <div className="space-y-4">
                 {order.items.map((item: any, i: number) => (
-                  <div key={i} className="flex justify-between items-center py-2">
+                  <div
+                    key={i}
+                    className="flex justify-between items-center py-2"
+                  >
                     <div className="flex items-center gap-4">
                       <div className="h-10 w-10 bg-gray-100 rounded-lg flex items-center justify-center font-bold text-gray-500">
                         {item.quantity}x
@@ -112,12 +137,14 @@ export function OrderDetail() {
                   <span>${order.pricing.stateTax.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between text-gray-600">
-                  <span>Platform Fee</span>
+                  <span>Service Fee</span>
                   <span>${order.pricing.platformFee.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between text-lg font-bold text-gray-900 pt-2">
                   <span>Total</span>
-                  <span className="text-[#E4983A]">${order.pricing.total.toLocaleString()}</span>
+                  <span className="text-[#E4983A]">
+                    ${order.pricing.total.toLocaleString()}
+                  </span>
                 </div>
               </div>
             </Card>
@@ -125,13 +152,16 @@ export function OrderDetail() {
             <Card title="Order Timeline">
               <div className="space-y-6 ml-2">
                 {order.timeline.map((step: any, i: number) => (
-                  <div key={i} className="relative pl-8 border-l-2 border-gray-200 last:border-0 pb-6 last:pb-0">
+                  <div
+                    key={i}
+                    className="relative pl-8 border-l-2 border-gray-200 last:border-0 pb-6 last:pb-0"
+                  >
                     <div className="absolute -left-[9px] top-0 h-4 w-4 rounded-full bg-[#E4983A]" />
                     <p className="font-medium text-gray-900 leading-none capitalize">
                       {step.status}
                     </p>
                     <p className="text-sm text-gray-500 mt-1">
-                      {format(new Date(step.time), 'hh:mm a')}
+                      {format(new Date(step.time), "hh:mm a")}
                     </p>
                   </div>
                 ))}
@@ -184,15 +214,15 @@ export function OrderDetail() {
             id: order.orderId,
             customer: order.customer.name,
             restaurant: order.restaurant.name,
-            date: format(new Date(order.createdAt), 'MMM dd, yyyy'),
+            date: format(new Date(order.createdAt), "MMM dd, yyyy"),
             items: order.items.map((item: any) => ({
               name: item.name,
               quantity: item.quantity,
-              price: item.pricePerItem
+              price: item.pricePerItem,
             })),
             subtotal: order.pricing.subtotal,
             tax: order.pricing.stateTax,
-            total: order.pricing.total
+            total: order.pricing.total,
           }}
         />
       </div>
