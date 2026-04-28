@@ -3,8 +3,8 @@ import baseApi from "../api/baseApi";
 export const bannerApi = baseApi.injectEndpoints({
     endpoints: (builder) => ({
         getBanners: builder.query({
-            query: ({ status = 'ACTIVE', page = 1, limit = 10 }) =>
-                `/api/v1/admin/banners?status=${status}&page=${page}&limit=${limit}`,
+            query: ({ status, page = 1, limit = 10 }) =>
+                `/api/v1/admin/banners?page=${page}&limit=${limit}${status ? `&status=${status}` : ''}`,
             providesTags: ["Banners"],
         }),
         addBanner: builder.mutation({

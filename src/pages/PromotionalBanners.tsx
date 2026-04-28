@@ -1,4 +1,4 @@
-﻿import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { AdminLayout } from '../components/layout/AdminLayout';
 import { Table } from '../components/ui/Table';
 import { Badge } from '../components/ui/Badge';
@@ -13,12 +13,12 @@ import { format } from 'date-fns';
 
 export function PromotionalBanners() {
     const [searchTerm, setSearchTerm] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
     const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
     const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
     const [selectedBanner, setSelectedBanner] = useState<any>(null);
 
-    // Live API Data
-    const { data: bannersResponse, isLoading } = useGetBannersQuery({ status: 'ACTIVE', page: 1, limit: 100 });
+    const { data: bannersResponse, isLoading } = useGetBannersQuery({ status: '', page: 1, limit: 1000 });
     const [deleteBanner, { isLoading: isDeleting }] = useDeleteBannerMutation();
     const [bannerToDelete, setBannerToDelete] = useState<string | null>(null);
 
@@ -66,6 +66,18 @@ export function PromotionalBanners() {
         );
     }, [bannersData, searchTerm]);
 
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchTerm]);
+
+    const itemsPerPage = 10;
+    const totalPages = Math.max(1, Math.ceil(filteredBanners.length / itemsPerPage));
+    
+    const paginatedBanners = useMemo(() => {
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        return filteredBanners.slice(startIndex, startIndex + itemsPerPage);
+    }, [filteredBanners, currentPage]);
+
     const handleDelete = (id: string) => {
         setBannerToDelete(id);
     };
@@ -84,6 +96,8 @@ export function PromotionalBanners() {
         setSelectedBanner(banner);
         setIsDetailModalOpen(true);
     };
+
+    console.log("=== API RESPONSE FOR BANNERS ===", bannersResponse);
 
     return (
         <AdminLayout>
@@ -130,7 +144,11 @@ export function PromotionalBanners() {
                         </div>
                     ) : (
                         <Table
-                            data={filteredBanners}
+                            data={paginatedBanners}
+                            currentPage={currentPage}
+                            totalPages={totalPages}
+                            totalResults={filteredBanners.length}
+                            onPageChange={(page) => setCurrentPage(page)}
                             columns={[
                                 {
                                     header: 'BANNER',

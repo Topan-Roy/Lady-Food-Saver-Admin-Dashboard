@@ -10,9 +10,12 @@ import { formatDistanceToNow } from 'date-fns';
 interface SupportTicket {
   id: string; // display ticketId
   _id: string; // internal mongodb id
+  conversationId?: string;
   subject: string;
   userName: string; // display name
   userID: string; // actual database id
+  customerId?: string;
+  providerId?: string;
   userType: string;
   status: string;
   priority: string;
@@ -31,19 +34,56 @@ export function Support() {
   const [selectedTicket, setSelectedTicket] = useState<SupportTicket | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const tickets: SupportTicket[] = (ticketsResponse?.data?.tickets || []).map((t: any) => ({
-    id: t["Ticket ID"] || t.ticketId,
-    _id: t.id || t._id,
-    subject: t.Subject || t.subject,
-    userName: t.User || t.userName || "Unknown",
-    userID: t.userID || t.userId || t._id,
-    userType: t["User Type"] || t.userType,
-    status: t.Status || t.status,
-    priority: t.Priority || t.priority,
-    date: t.Date ? formatDistanceToNow(new Date(t.Date), { addSuffix: true }) :
-      (t.createdAt ? formatDistanceToNow(new Date(t.createdAt), { addSuffix: true }) : 'N/A'),
-    description: t.Description || t.description
-  }));
+  const tickets: SupportTicket[] = (ticketsResponse?.data?.tickets || []).map((t: any) => {
+    const userType = t["User Type"] || t.userType || '';
+    const normalizedUserType = String(userType).toLowerCase();
+    const customerId =
+      t.userID ||
+      t.customerId ||
+      t.customer?._id ||
+      t.customer?.id ||
+      t.user?._id ||
+      t.user?.id ||
+      t.userId?._id ||
+      t.userId?.id;
+    const providerId =
+      t.userID ||
+      t.providerId ||
+      t.provider?._id ||
+      t.provider?.id ||
+      t.restaurant?._id ||
+      t.restaurant?.id;
+    const resolvedUserId = normalizedUserType === 'restaurant' || normalizedUserType === 'provider'
+      ? (providerId || t.userID || t.userId || t._id)
+      : (customerId || t.userID || t.userId || t._id);
+
+    return {
+      id: t["Ticket ID"] || t.ticketId,
+      _id: t.id || t._id,
+      conversationId: t.conversationId || t.convershasonId,
+      subject: t.Subject || t.subject,
+      userName:
+        t.User ||
+        t.userName ||
+        t.customer?.fullName ||
+        t.user?.fullName ||
+        t.userId?.fullName ||
+        t.provider?.restaurantsName ||
+        t.provider?.restaurantName ||
+        t.restaurant?.restaurantsName ||
+        t.restaurant?.restaurantName ||
+        "Unknown",
+      userID: resolvedUserId,
+      customerId,
+      providerId,
+      userType,
+      status: t.Status || t.status,
+      priority: t.Priority || t.priority,
+      date: t.Date ? formatDistanceToNow(new Date(t.Date), { addSuffix: true }) :
+        (t.createdAt ? formatDistanceToNow(new Date(t.createdAt), { addSuffix: true }) : 'N/A'),
+      description: t.Description || t.description
+    };
+  });
 
   const openChat = (ticket: any) => {
     setSelectedTicket(ticket);
