@@ -1,6 +1,6 @@
-﻿import { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogIn, Mail, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react';
+import { LogIn, Mail, Lock, Eye, EyeOff, ArrowRight, Loader2 } from 'lucide-react';
 import { useDispatch } from 'react-redux';
 import { getAppLogo } from '../utils/logo';
 
@@ -31,6 +31,7 @@ export function Login() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg("");
+    setLocalLoading(true);
     try {
       const result = await login({ email, password }).unwrap();
       const responseData = result.data || result;
@@ -64,11 +65,14 @@ export function Login() {
       } else if (accessToken && user?.role !== 'ADMIN') {
         setErrorMsg("Access Denied: Only administrators can access this dashboard.");
         dispatch(logout()); // Clean up any partial state
+        setLocalLoading(false);
       } else {
+        setLocalLoading(false);
         console.error("Login successful but no token found in session object:", result);
         setErrorMsg("Login failed: Invalid server response structure.");
       }
     } catch (error: any) {
+      setLocalLoading(false);
       console.error("Login Error:", error);
       const errorMessage = error?.data?.message || (typeof error?.data === 'string' ? error.data : null) || error?.message || "Login failed";
       setErrorMsg(`Login Failed: ${errorMessage}`);
@@ -221,7 +225,10 @@ export function Login() {
                 className="w-full bg-[#E4983A] text-white font-bold py-4 rounded-2xl shadow-lg shadow-[#E4983A]/20 hover:bg-[#e0902e] hover:-translate-y-0.5 active:translate-y-0 transition-all flex items-center justify-center gap-2 group"
               >
                 {isLoading ? (
-                  <div className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  <>
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                    <span>Signing in...</span>
+                  </>
                 ) : (
                   <>
                     Sign In to Dashboard
@@ -259,7 +266,10 @@ export function Login() {
                   className="w-full bg-[#E4983A] text-white font-bold py-4 rounded-2xl shadow-lg shadow-[#E4983A]/20 hover:bg-[#e4922d] transition-all flex items-center justify-center gap-2"
                 >
                   {isLoading ? (
-                    <div className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    <>
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                      <span>Sending Code...</span>
+                    </>
                   ) : 'Send Verification Code'}
                 </button>
                 <button
@@ -300,7 +310,10 @@ export function Login() {
                   className="w-full bg-[#E4983A] text-white font-bold py-4 rounded-2xl shadow-lg shadow-[#E4983A]/20 hover:bg-[#e1902e] transition-all flex items-center justify-center gap-2"
                 >
                   {isLoading ? (
-                    <div className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    <>
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                      <span>Verifying...</span>
+                    </>
                   ) : 'Verify Code'}
                 </button>
                 <button
@@ -353,7 +366,10 @@ export function Login() {
                 className="w-full bg-[#E4983A] text-white font-bold py-4 rounded-2xl shadow-lg shadow-[#E4983A]/20 hover:bg-[#e18f2b] transition-all flex items-center justify-center gap-2"
               >
                 {isLoading ? (
-                  <div className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  <>
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                    <span>Updating...</span>
+                  </>
                 ) : 'Update Password'}
               </button>
             </form>
