@@ -20,12 +20,10 @@ const baseQuery = fetchBaseQuery({
         headers.set("Expires", "0");
         return headers;
     },
-    // Modern fetch API way to disable caching
-    fetchFn: (input, init) =>
-        fetch(input, {
-            ...init,
-            cache: "no-store",
-        }),
+    fetchFn: (e, t) => fetch(e, {
+        ...t,
+        cache: "no-store"
+    })
 });
 
 const baseQueryWithReauth = async (args: any, api: any, extraOptions: any) => {

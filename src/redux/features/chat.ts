@@ -26,7 +26,7 @@ export const chatApi = baseApi.injectEndpoints({
         }),
         adminSendMessage: builder.mutation({
             query: (data) => ({
-                url: "/api/v1/chat/message/customer-to-admin",
+                url: "/api/chat/message/admin-to-customer",
                 method: "POST",
                 body: data,
             }),
@@ -34,7 +34,7 @@ export const chatApi = baseApi.injectEndpoints({
         }),
         adminToProvider: builder.mutation({
             query: (data) => ({
-                url: "/api/v1/chat/message/customer-to-admin",
+                url: "/api/chat/message/admin-to-provider",
                 method: "POST",
                 body: data,
             }),

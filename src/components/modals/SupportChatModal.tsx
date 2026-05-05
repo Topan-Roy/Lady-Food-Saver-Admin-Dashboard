@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../redux/store';
 import { Modal } from '../ui/Modal';
@@ -82,7 +82,9 @@ export function SupportChatModal({
 
       const payload = {
         receiverId: targetId,
-        text: message
+        text: message,
+        content: message, // Fallback for some backends
+        conversationId: conversationId
       };
 
       if (isRestaurant) {
