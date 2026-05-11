@@ -1,4 +1,4 @@
-﻿import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { AdminLayout } from '../components/layout/AdminLayout';
 import { Table } from '../components/ui/Table';
@@ -21,6 +21,7 @@ export function UserManagement() {
   const [ratingFilter, setRatingFilter] = useState('all_ratings');
   const [currentPage, setCurrentPage] = useState(1);
   const [restaurantPage, setRestaurantPage] = useState(1);
+  const itemsPerPage = 10;
   const navigate = useNavigate();
 
   // Reset filters and pagination when changing tabs
@@ -43,14 +44,14 @@ export function UserManagement() {
     state: stateFilter,
     status: statusFilter,
     rating: ratingFilter,
-    page: restaurantPage,
-    limit: 10
+    page: 1, // Fetch everything for local pagination/search
+    limit: 1000
   }, { skip: activeTab !== 'restaurants' });
 
   // API Hooks for Customers
   const { data: customersDataAPI, isLoading: isCustomersLoading } = useGetCustomersQuery({
-    page: currentPage,
-    limit: 10
+    page: 1, // Fetch everything for local pagination/search
+    limit: 1000
   }, { skip: activeTab !== 'customers' });
 
   const [approveRestaurant] = useApproveRestaurantMutation();
@@ -169,6 +170,16 @@ export function UserManagement() {
     });
   }, [customerData, searchTerm, statusFilter]);
 
+  const paginatedRestaurants = useMemo(() => {
+    const start = (restaurantPage - 1) * itemsPerPage;
+    return filteredRestaurants.slice(start, start + itemsPerPage);
+  }, [filteredRestaurants, restaurantPage]);
+
+  const paginatedCustomers = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    return filteredCustomers.slice(start, start + itemsPerPage);
+  }, [filteredCustomers, currentPage]);
+
   return <AdminLayout>
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -272,10 +283,10 @@ export function UserManagement() {
             </div>
           ) : (
             <Table
-              data={filteredRestaurants}
+              data={paginatedRestaurants}
               currentPage={restaurantPage}
-              totalPages={restaurantsData?.pagination?.pages || 1}
-              totalResults={restaurantsData?.pagination?.total || filteredRestaurants.length}
+              totalPages={Math.ceil(filteredRestaurants.length / itemsPerPage) || 1}
+              totalResults={filteredRestaurants.length}
               onPageChange={setRestaurantPage}
               columns={[
                 { header: 'Restaurant Name', accessorKey: 'name', className: 'font-medium text-gray-900' },
@@ -352,10 +363,10 @@ export function UserManagement() {
           </div>
         ) : (
           <Table
-            data={filteredCustomers}
+            data={paginatedCustomers}
             currentPage={currentPage}
-            totalPages={customersDataAPI?.pagination?.pages || 1}
-            totalResults={customersDataAPI?.pagination?.total || filteredCustomers.length}
+            totalPages={Math.ceil(filteredCustomers.length / itemsPerPage) || 1}
+            totalResults={filteredCustomers.length}
             onPageChange={setCurrentPage}
             columns={[
               {

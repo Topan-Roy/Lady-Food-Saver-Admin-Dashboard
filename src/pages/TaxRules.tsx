@@ -1,4 +1,4 @@
-﻿import { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { AdminLayout } from '../components/layout/AdminLayout';
 import { Table } from '../components/ui/Table';
 import { Button } from '../components/ui/Button';
@@ -58,6 +58,10 @@ export function TaxRules() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<any>(null);
 
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
   const taxRules = useMemo(() => {
     if (!apiResponse?.data?.StateTexRules) return [];
     return apiResponse.data.StateTexRules.map((item: any) => ({
@@ -68,6 +72,14 @@ export function TaxRules() {
       lastUpdated: item.LastUpdated ? format(new Date(item.LastUpdated), 'MMM dd, yyyy') : 'N/A'
     }));
   }, [apiResponse]);
+
+  const totalResults = taxRules.length;
+  const totalPages = Math.ceil(totalResults / itemsPerPage);
+  
+  const paginatedData = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    return taxRules.slice(start, start + itemsPerPage);
+  }, [taxRules, currentPage]);
 
   const stats = useMemo(() => {
     if (!apiResponse?.data?.['Tax information']) {
@@ -369,7 +381,13 @@ export function TaxRules() {
             Export
           </Button>
         </div>
-        <Table data={taxRules} columns={[{
+        <Table 
+          data={paginatedData} 
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+          totalResults={totalResults}
+          columns={[{
           header: 'State',
           accessorKey: 'state',
           className: 'font-medium'
