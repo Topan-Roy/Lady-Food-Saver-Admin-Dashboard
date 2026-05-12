@@ -11,6 +11,7 @@ import {
   ReceiptText,
   FileText,
   Image,
+  Heart,
 } from "lucide-react";
 import { useDispatch } from "react-redux";
 import { logout } from "../../redux/slices/authSlice";
@@ -51,6 +52,11 @@ export function Sidebar() {
       icon: Image,
       label: "Banners",
       path: "/banners",
+    },
+    {
+      icon: Heart,
+      label: "Donations",
+      path: "/donations",
     },
     {
       icon: ReceiptText,

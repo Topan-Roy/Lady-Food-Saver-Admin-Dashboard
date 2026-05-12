@@ -157,7 +157,12 @@ export const dashboardApi = baseApi.injectEndpoints({
             }),
             invalidatesTags: ["dashboardStats"],
         }),
+        getDonations: builder.query({
+            query: ({ status = 'all', page = 1, limit = 20 }) =>
+                `/api/v1/admin/donation/tokens?status=${status}&page=${page}&limit=${limit}`,
+            providesTags: ["donations"],
+        }),
     }),
 });
 
-export const { useGetDashboardStatsQuery, useGetRevenueStatsQuery, useGetOrderStatsQuery, useGetRecentOrdersQuery, useGetActivitiesQuery, useGetTopRestaurantsQuery, useGetTrendingMenusQuery, useGetRestaurantStatsQuery, useGetRestaurantProfileQuery, useGetRestaurantPickupWindowsQuery, useGetRestaurantActivitySummaryQuery, useGetRestaurantLocationQuery, useGetRestaurantComplianceQuery, useBlockRestaurantMutation, useUnblockRestaurantMutation, useGetRestaurantOrdersQuery, useGetRestaurantReviewsQuery, useGetGlobalReviewsQuery, useGetAllRestaurantsQuery, useApproveRestaurantMutation, useRejectRestaurantMutation, useGetCustomersQuery, useBlockCustomerMutation, useUnblockCustomerMutation, useGetSingleCustomerQuery, useGetCustomerProfileQuery, useGetTransactionOrdersQuery, useGetOrderDetailsQuery, useReplyToReviewMutation } = dashboardApi;
+export const { useGetDashboardStatsQuery, useGetRevenueStatsQuery, useGetOrderStatsQuery, useGetRecentOrdersQuery, useGetActivitiesQuery, useGetTopRestaurantsQuery, useGetTrendingMenusQuery, useGetRestaurantStatsQuery, useGetRestaurantProfileQuery, useGetRestaurantPickupWindowsQuery, useGetRestaurantActivitySummaryQuery, useGetRestaurantLocationQuery, useGetRestaurantComplianceQuery, useBlockRestaurantMutation, useUnblockRestaurantMutation, useGetRestaurantOrdersQuery, useGetRestaurantReviewsQuery, useGetGlobalReviewsQuery, useGetAllRestaurantsQuery, useApproveRestaurantMutation, useRejectRestaurantMutation, useGetCustomersQuery, useBlockCustomerMutation, useUnblockCustomerMutation, useGetSingleCustomerQuery, useGetCustomerProfileQuery, useGetTransactionOrdersQuery, useGetOrderDetailsQuery, useReplyToReviewMutation, useGetDonationsQuery } = dashboardApi;
