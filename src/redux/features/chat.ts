@@ -24,9 +24,22 @@ export const chatApi = baseApi.injectEndpoints({
             }),
             invalidatesTags: ["Chat"],
         }),
+        adminStartCustomerConversation: builder.mutation({
+            query: (data) => ({
+                url: "/api/v1/chat/admin/start-conversation",
+                method: "POST",
+                body: data,
+            }),
+            invalidatesTags: ["Chat"],
+        }),
+        getAdminCustomerConversations: builder.query({
+            query: ({ page = 1, limit = 20 }) =>
+                `/api/v1/chat/admin/customer-conversations?page=${page}&limit=${limit}`,
+            providesTags: ["Chat"],
+        }),
         adminSendMessage: builder.mutation({
             query: (data) => ({
-                url: "/api/chat/message/admin-to-customer",
+                url: "/api/v1/chat/message/admin-to-customer",
                 method: "POST",
                 body: data,
             }),
@@ -34,9 +47,17 @@ export const chatApi = baseApi.injectEndpoints({
         }),
         adminToProvider: builder.mutation({
             query: (data) => ({
-                url: "/api/chat/message/admin-to-provider",
+                url: "/api/v1/chat/message/admin-to-provider",
                 method: "POST",
                 body: data,
+            }),
+            invalidatesTags: ["Chat"],
+        }),
+        archiveConversation: builder.mutation({
+            query: ({ conversationId, status = "ARCHIVED" }) => ({
+                url: `/api/v1/chat/conversations/${conversationId}/archive`,
+                method: "PATCH",
+                body: { status },
             }),
             invalidatesTags: ["Chat"],
         }),
@@ -56,8 +77,11 @@ export const {
     useGetOrCreateConversationMutation,
     useGetMessagesQuery,
     useSendMessageMutation,
+    useAdminStartCustomerConversationMutation,
+    useGetAdminCustomerConversationsQuery,
     useAdminSendMessageMutation,
     useAdminToProviderMutation,
+    useArchiveConversationMutation,
     useGetSupportTicketsQuery,
     useGetAdminSupportTicketsQuery
 } = chatApi;
