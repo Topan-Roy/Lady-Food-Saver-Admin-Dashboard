@@ -37,16 +37,24 @@ export function Login() {
       const responseData = result.data || result;
       console.log("Response Data:", responseData);
 
-      // Extract tokens from session object as per API response
+      // Extract tokens from session object or directly from response
       const accessToken =
         responseData.session?.accessToken ||
-        responseData.data?.session?.accessToken; // Fallback for double nesting
+        responseData.data?.session?.accessToken ||
+        responseData.accessToken ||
+        responseData.data?.accessToken ||
+        responseData.token ||
+        responseData.data?.token ||
+        responseData.data?.tokens?.accessToken;
 
       const refreshToken =
         responseData.session?.refreshToken ||
-        responseData.data?.session?.refreshToken;
+        responseData.data?.session?.refreshToken ||
+        responseData.refreshToken ||
+        responseData.data?.refreshToken ||
+        responseData.data?.tokens?.refreshToken;
 
-      const user = responseData.user || responseData.data?.user;
+      const user = responseData.user || responseData.data?.user || responseData.data?.data?.user;
 
       if (accessToken && user?.role === 'ADMIN') {
         dispatch(setLogin({

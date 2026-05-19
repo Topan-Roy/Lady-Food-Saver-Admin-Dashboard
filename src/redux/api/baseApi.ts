@@ -14,23 +14,20 @@ const baseQuery = fetchBaseQuery({
         if (token) {
             headers.set("Authorization", `Bearer ${token}`);
         }
-        // Add cache-control headers to prevent caching
-        headers.set("Cache-Control", "no-cache, no-store, must-revalidate");
-        headers.set("Pragma", "no-cache");
-        headers.set("Expires", "0");
         return headers;
-    },
-    fetchFn: (e, t) => fetch(e, {
-        ...t,
-        cache: "no-store"
-    })
+    }
 });
 
 const baseQueryWithReauth = async (args: any, api: any, extraOptions: any) => {
     let result = await baseQuery(args, api, extraOptions);
 
+    const isPublicEndpoint = 
+        typeof args === 'string' 
+            ? args.includes('/auth/') 
+            : args?.url?.includes('/auth/');
+
     // If we get a 401 Unauthorized, try to refresh the token
-    if (result?.error && result.error.status === 401) {
+    if (result?.error && result.error.status === 401 && !isPublicEndpoint) {
         const refreshToken = localStorage.getItem("refreshToken");
 
         if (refreshToken) {
